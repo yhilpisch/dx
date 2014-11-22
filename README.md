@@ -67,15 +67,14 @@ You find a **zip file** called ``dx.zip`` in the ``dx-analytics`` folder with al
 
 Although the focus of DX Analytics lies on the simulation and valuation of derivatives instruments and portfolios composed thereof, there is still "so much" missing alone in this particular area (given the broadness of the field) that a comprehensive list of missing pieces is impossible to compile. Some **major features missing** are, for example:
 
-* stochastic short rates for risk-neutral discounting
 * support for multi-currency derivatives and portfolios
-* several features to model more exotic payoffs
+* several features to model more exotic payoffs (e.g. barriers)
 * standardized model calibration classes/funtions
 * more sophisticated models for the pricing of rate-sensitive instruments
 
-To put it the other way round, the **strengths of DX Analytics** at the moment are the modeling, pricing and risk management of **single-currency equity-based derivatives and portfolios therof**. In this regard, the library has some features to offer that are hard to find in other libraries (also commercial ones).
+To put it the other way round, the **strengths of DX Analytics** at the moment are the modeling, pricing and risk management of **single-currency equity-based derivatives and portfolios thereof**. In this regard, the library has some features to offer that are hard to find in other libraries (also commercial ones).
 
-In that sense, the current version of DX Analytics is the beginning only of a larger project developing a full-fledged derivatives analytics suite---hopefully with the support of the **Python Quant community**. If you find something missing that you think would be of benefit for all users, just let us know.
+In that sense, the current version of DX Analytics is the beginning only of a larger project for developing a full-fledged derivatives analytics suite---hopefully with the support of the **Python Quant Finance community**. If you find something missing that you think would be of benefit for all users, just let us know.
 
 ## Words of Caution
 
@@ -97,8 +96,8 @@ The Python Quants also provide the **Python Quant Platform** as a solution for b
 
 You find the documentation under http://dx-analytics.com.
 
-## Copyright, License & Disclaimer
 
+## Copyright, License & Disclaimer
 
 © Dr. Yves J. Hilpisch \| The Python Quants GmbH
 
