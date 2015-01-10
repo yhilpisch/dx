@@ -102,8 +102,8 @@ class interest_rate_swap(object):
         if not fixed_seed:
             self.payoff = self.generate_payoff(fixed_seed=fixed_seed)
         discount_factors = self.discount_curve.get_discount_factors(
-            self.payment_dates, dtobjects=True)
-        present_values = self.payoff.T * discount_factors[:, 1][::-1]
+            self.payment_dates, dtobjects=True)[1]
+        present_values = self.payoff.T * discount_factors[:][::-1]
         if full:
             return present_values.T
         else:

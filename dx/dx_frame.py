@@ -127,7 +127,7 @@ class constant_short_rate(object):
         year deltas as decimal number (dtobjects=False)
         '''
         forward_rates = np.array(len(time_list) * (self.short_rate,))
-        return time_list, np.array(forward_rates)
+        return time_list, forward_rates
 
     def get_discount_factors(self, time_list, paths=None, dtobjects=True):
         if dtobjects is True:
@@ -135,7 +135,7 @@ class constant_short_rate(object):
         else:
             dlist = np.array(time_list)
         discount_factors = np.exp(self.short_rate * np.sort(-dlist))
-        return time_list, np.array(discount_factors)
+        return time_list, discount_factors
 
 
 class deterministic_short_rate(object):
@@ -189,7 +189,7 @@ class deterministic_short_rate(object):
         else:
             tlist = time_list
         forward_rates = yield_curve[:, 1] + yield_curve[:, 2] * tlist
-        return time_list, np.array(forward_rates)
+        return time_list, forward_rates
 
     def get_discount_factors(self, time_list, paths=None, dtobjects=True):
         discount_factors = []
@@ -197,14 +197,14 @@ class deterministic_short_rate(object):
             dlist = get_year_deltas(time_list)
         else:
             dlist = time_list
-        forward_rate = self.get_forward_rates(time_list, dtobjects)
+        time_list, forward_rate = self.get_forward_rates(time_list, dtobjects)
         for no in range(len(dlist)):
             factor = 0.0
             for d in range(no, len(dlist) - 1):
                 factor += ((dlist[d + 1] - dlist[d])
-                        * (0.5 * (forward_rate[d + 1, 1] + forward_rate[d, 1])))
+                        * (0.5 * (forward_rate[d + 1] + forward_rate[d])))
             discount_factors.append(np.exp(-factor))
-        return time_list, np.array(discount_factors)
+        return time_list, discount_factors
 
 
 # Market environment class
