@@ -903,3 +903,18 @@ class square_root_jump_diffusion_plus(square_root_jump_diffusion):
         sum2 = self.initial_value * ((4 * g ** 2 * np.exp(g * t)) /
             (2 * g + (self.kappa + g) * (np.exp(g * t) - 1)) ** 2)
         self.forward_rates = np.array(zip(time_grid, sum1 + sum2))
+
+class general_underlying(object):
+    ''' Needed for VAR-based portfolio modeling and valuation. '''
+    def __init__(self, name, data, val_env):
+        self.name = name
+        self.data = data
+        self.paths = val_env.get_constant('paths')
+        self.frequency = 'B'
+        self.discount_curve = val_env.get_curve('discount_curve')
+        self.special_dates = []
+        self.time_grid = val_env.get_list('time_grid')
+        self.fit_model = None
+    
+    def get_instrument_values(self, fixed_seed=False):
+        return self.data.values

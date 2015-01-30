@@ -191,7 +191,7 @@ class valuation_mcs_european_single(valuation_class_single):
             used same/fixed seed for valuation
         '''
         cash_flow = self.generate_payoff(fixed_seed=fixed_seed)
-        
+
         discount_factor = self.discount_curve.get_discount_factors(
             self.underlying.time_grid, self.paths)[1][0]
 
@@ -658,7 +658,7 @@ class derivatives_portfolio(object):
         market environment for the valuation
     risk_factors : dict
         dictionary of market environments for the risk_factors
-    correlations : list
+    correlations : list or pd.DataFrame
         correlations between risk_factors
     fixed_seed : boolean
         flag for fixed rng seed
@@ -667,8 +667,14 @@ class derivatives_portfolio(object):
     =======
     get_positions :
         prints information about the single portfolio positions
+    get_values :
+        estimates and returns positions values
+    get_present_values :
+        returns the full distribution of the simulated portfolio values
     get_statistics :
         returns a pandas DataFrame object with portfolio statistics
+    get_port_risk : 
+        estimates sensitivities for point-wise parameter shocks
     '''
 
     def __init__(self, name, positions, val_env, risk_factors,
@@ -678,10 +684,10 @@ class derivatives_portfolio(object):
         self.val_env = val_env
         self.risk_factors = risk_factors
         self.underlyings = set()
-        if correlations:
-            self.correlations = correlations
+        if correlations is None or correlations is False:
+            self.correlations = None
         else:
-            self.correlations = []
+            self.correlations = correlations
         self.time_grid = None
         self.underlying_objects = {}
         self.valuation_objects = {}
@@ -730,18 +736,29 @@ class derivatives_portfolio(object):
         correlation_matrix = np.zeros((len(ul_list), len(ul_list)))
         np.fill_diagonal(correlation_matrix, 1.0)
         correlation_matrix = pd.DataFrame(correlation_matrix,
-                                          index=ul_list, columns=ul_list)
+                                        index=ul_list, columns=ul_list)
 
-        for corr in self.correlations:
-            if corr[2] >= 1.0:
-                corr[2] = 0.999999999999
-            if corr[2] <= -1.0:
-                corr[2] = -0.999999999999
-            # fill correlation matrix
-            correlation_matrix[corr[0]].ix[corr[1]] = corr[2]
-            correlation_matrix[corr[1]].ix[corr[0]] = corr[2]
-        # determine Cholesky matrix
-        cholesky_matrix = np.linalg.cholesky(np.array(correlation_matrix))
+        if self.correlations is not None:
+            if isinstance(self.correlations, list):
+                # if correlations are given as list of list/tuple objects
+                for corr in self.correlations:
+                    if corr[2] >= 1.0:
+                        corr[2] = 0.999999999999
+                    if corr[2] <= -1.0:
+                        corr[2] = -0.999999999999
+                    # fill correlation matrix
+                    correlation_matrix[corr[0]].ix[corr[1]] = corr[2]
+                    correlation_matrix[corr[1]].ix[corr[0]] = corr[2]
+                # determine Cholesky matrix
+                cholesky_matrix = np.linalg.cholesky(np.array(
+                                                    correlation_matrix))
+            else:
+                # if correlation matrix was already given as pd.DataFrame
+                cholesky_matrix = np.linalg.cholesky(np.array(
+                                                    self.correlations))
+        else:
+            cholesky_matrix = np.linalg.cholesky(np.array(
+                                                    correlation_matrix))
 
         # dictionary with index positions for the
         # slice of the random number array to be used by
@@ -773,7 +790,7 @@ class derivatives_portfolio(object):
             # select the right simulation class
             model = models[mar_env.constants['model']]
             # instantiate simulation object
-            if self.correlations:
+            if self.correlations is not None:
                 corr = True
             else:
                 corr = False
@@ -988,3 +1005,111 @@ def value_parallel(objs):
     for o in res_list:
         results[o[0]] = o[1]
     return results
+
+
+class var_derivatives_portfolio(derivatives_portfolio):
+    ''' Class for building and valuing portfolios of derivatives positions
+    with risk factors given from fitted VAR model.
+
+    Attributes
+    ==========
+    name : str
+        name of the object
+    positions : dict
+        dictionary of positions (instances of derivatives_position class)
+    val_env : market_environment
+        market environment for the valuation
+    var_risk_factors : VAR model
+        vector autoregressive model for risk factors
+    fixed_seed : boolean
+        flag for fixed rng seed
+
+    Methods
+    =======
+    get_positions :
+        prints information about the single portfolio positions
+    get_values :
+        estimates and returns positions values
+    get_present_values :
+        returns the full distribution of the simulated portfolio values
+    '''
+
+    def __init__(self, name, positions, val_env, var_risk_factors,
+                 fixed_seed=False, parallel=False):
+        self.name = name
+        self.positions = positions
+        self.val_env = val_env
+        self.var_risk_factors = var_risk_factors
+        self.underlyings = set()
+    
+        self.time_grid = None
+        self.underlying_objects = {}
+        self.valuation_objects = {}
+        self.fixed_seed = fixed_seed
+        self.special_dates = []
+        for pos in self.positions:
+            # determine earliest starting_date
+            self.val_env.constants['starting_date'] = \
+                min(self.val_env.constants['starting_date'],
+                    positions[pos].mar_env.pricing_date)
+            # determine latest date of relevance
+            self.val_env.constants['final_date'] = \
+                max(self.val_env.constants['final_date'],
+                    positions[pos].mar_env.constants['maturity'])
+            # collect all underlyings
+            # add to set; avoids redundancy
+            for ul in positions[pos].underlyings:
+                self.underlyings.add(ul)
+
+        # generating general time grid
+        start = self.val_env.constants['starting_date']
+        end = self.val_env.constants['final_date']
+        time_grid = pd.date_range(start=start, end=end,
+                                  freq='B' # allow business day only
+                                  ).to_pydatetime()
+        time_grid = list(time_grid)
+
+        if start not in time_grid:
+            time_grid.insert(0, start)
+        if end not in time_grid:
+            time_grid.append(end)
+        # delete duplicate entries & sort dates in time_grid
+        time_grid = sorted(set(time_grid))
+        
+        self.time_grid = np.array(time_grid)
+        self.val_env.add_list('time_grid', self.time_grid)
+
+        #
+        # generate simulated paths
+        #
+        self.fit_model = var_risk_factors.fit(maxlags=5, ic='bic')
+        sim_paths = self.fit_model.simulate(
+                        paths=self.val_env.get_constant('paths'),
+                        steps=len(self.time_grid),
+                        initial_values=var_risk_factors.y[-1])
+        symbols = sim_paths[0].columns.values
+        for sym in symbols:
+            df = pd.DataFrame()
+            for i, path in enumerate(sim_paths):
+                df[i] = path[sym]
+            self.underlying_objects[sym] = general_underlying(
+                                        sym, df, self.val_env)
+        for pos in positions:
+            # select right valuation class (European, American)
+            val_class = otypes[positions[pos].otype]
+            # pick the market environment and add the valuation environment
+            mar_env = positions[pos].mar_env
+            mar_env.add_environment(self.val_env)
+            # instantiate valuation classes
+            self.valuation_objects[pos] = \
+                val_class(name=positions[pos].name,
+                          mar_env=mar_env,
+                          underlying=self.underlying_objects[
+                                          positions[pos].underlyings[0]],
+                          payoff_func=positions[pos].payoff_func)
+
+    def get_statistics(self):
+        raise NotImplementedError
+    def get_port_risk(self):
+        raise NotImplementedError
+
