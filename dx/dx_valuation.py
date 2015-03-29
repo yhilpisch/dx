@@ -865,10 +865,18 @@ class derivatives_portfolio(object):
     def get_present_values(self, fixed_seed=False):
         ''' Get full distribution of present values. '''
         present_values = np.zeros(self.val_env.get_constant('paths'))
-        for pos in self.valuation_objects:
-            present_values += self.valuation_objects[pos].present_value(
-                                fixed_seed = fixed_seed, full=True)[1] \
-                                * self.positions[pos].quantity
+        if self.parallel is True:
+            self.underlying_objects = \
+                simulate_parallel(self.underlying_objects.values())
+            results = present_values_parallel(self.valuation_objects.values())
+            for pos in self.valuation_objects:
+                present_values += results[self.valuation_objects[pos].name] \
+                                    * self.positions[pos].quantity
+        else:
+            for pos in self.valuation_objects:
+                present_values += self.valuation_objects[pos].present_value(
+                                    fixed_seed = fixed_seed, full=True)[1] \
+                                    * self.positions[pos].quantity
         return present_values
 
 
@@ -996,6 +1004,25 @@ def value_parallel(objs):
         # print "I am %s" % o
         pv = o.present_value()
         output.put((o.name, pv))
+    for o in objs:
+        procs.append(mp.Process(target=worker, args=(o, output)))
+    [pr.start() for pr in procs]
+    [pr.join() for pr in procs]
+    res_list = [output.get() for o in objs]
+    results = {}
+    for o in res_list:
+        results[o[0]] = o[1]
+    return results
+
+def present_values_parallel(objs):
+    procs = []
+    man = mp.Manager()
+    output = man.Queue()
+
+    def worker(o, output):
+        # print "I am %s" % o
+        pvs = o.present_value(full=True)[1]
+        output.put((o.name, pvs))
     for o in objs:
         procs.append(mp.Process(target=worker, args=(o, output)))
     [pr.start() for pr in procs]
