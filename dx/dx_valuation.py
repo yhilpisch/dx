@@ -950,9 +950,16 @@ class derivatives_portfolio(object):
                 if Greek == 'Vega':
                     underlying.update(volatility=level * in_vol)
                 pos_list = []
-                for val_obj in self.valuation_objects.values():
-                    value = val_obj.present_value(fixed_seed=fixed_seed)
-                    pos_list.append(value)
+                if self.parallel is True:
+                    respara = value_parallel(self.valuation_objects.values())
+                    pos_list = [respara[self.valuation_objects[pos].name]
+                              * self.positions[pos].quantity
+                                for pos in self.valuation_objects]
+                else:
+                    for pos in self.valuation_objects:
+                        value = self.valuation_objects[pos].present_value(
+                                                    fixed_seed=fixed_seed)
+                        pos_list.append(value * self.positions[pos].quantity)
                 if Greek == 'Delta':
                     results.append((round(level * in_val, 2), 
                                     sum(pos_list)))
