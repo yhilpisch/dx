@@ -887,11 +887,15 @@ class derivatives_portfolio(object):
             self.underlying_objects = \
                 simulate_parallel(self.underlying_objects.values())
             results = value_parallel(self.valuation_objects.values())
+            delta_list = greeks_parallel(self.valuation_objects.values(),
+                                        Greek='Delta')
+            vega_list = greeks_parallel(self.valuation_objects.values(),
+                                        Greek='Vega')
         # iterate over all positions in portfolio
         for pos in self.valuation_objects:
             pos_list = []
             if self.parallel is True:
-                present_value = results[pos]
+                present_value = results[self.valuation_objects[pos].name]
             else:
                 present_value = self.valuation_objects[pos].present_value(
                                 fixed_seed = fixed_seed, accuracy=3)
@@ -947,8 +951,10 @@ class derivatives_portfolio(object):
             for level in levels:
                 if Greek == 'Delta':
                     underlying.update(initial_value=level * in_val)
-                if Greek == 'Vega':
+                elif Greek == 'Vega':
                     underlying.update(volatility=level * in_vol)
+                else:
+                    raise NotImplementedError('Spelling error or not implemented.')
                 pos_list = []
                 if self.parallel is True:
                     respara = value_parallel(self.valuation_objects.values())
@@ -1030,6 +1036,29 @@ def present_values_parallel(objs):
         # print "I am %s" % o
         pvs = o.present_value(full=True)[1]
         output.put((o.name, pvs))
+    for o in objs:
+        procs.append(mp.Process(target=worker, args=(o, output)))
+    [pr.start() for pr in procs]
+    [pr.join() for pr in procs]
+    res_list = [output.get() for o in objs]
+    results = {}
+    for o in res_list:
+        results[o[0]] = o[1]
+    return results
+
+def greeks_parallel(objs, Greek='Delta'):
+    procs = []
+    man = mp.Manager()
+    output = man.Queue()
+
+    def worker(o, output):
+        if Greek == 'Delta':
+            output.put((o.name, o.delta()))
+        elif Greek == 'Vega':
+            output.put((o.name, o.vega()))
+        else:
+            raise NotImplementedError('Spelling error or not implemented.')
+            
     for o in objs:
         procs.append(mp.Process(target=worker, args=(o, output)))
     [pr.start() for pr in procs]
