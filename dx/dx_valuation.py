@@ -541,7 +541,8 @@ class valuation_mcs_american_multi(valuation_class_multi):
         instrument_values = {}
         for key, obj in self.instrument_values.items():
             instrument_values[key] = \
-                self.instrument_values[key][time_index_start:time_index_end + 1]
+                self.instrument_values[key][time_index_start:time_index_end
+                                            + 1]
         try:
             payoff = eval(self.payoff_func)
             return instrument_values, payoff, time_index_start, time_index_end
@@ -868,7 +869,8 @@ class derivatives_portfolio(object):
         if self.parallel is True:
             self.underlying_objects = \
                 simulate_parallel(self.underlying_objects.values())
-            results = present_values_parallel(self.valuation_objects.values())
+            results = value_parallel(self.valuation_objects.values(),
+                                     full=True)
             for pos in self.valuation_objects:
                 present_values += results[self.valuation_objects[pos].name] \
                                     * self.positions[pos].quantity
@@ -880,13 +882,16 @@ class derivatives_portfolio(object):
         return present_values
 
 
-    def get_statistics(self, fixed_seed=False):
+    def get_statistics(self, fixed_seed=None):
         ''' Providing position statistics. '''
         res_list = []
+        if fixed_seed is None:
+            fixed_seed = self.fixed_seed
         if self.parallel is True:
             self.underlying_objects = \
                 simulate_parallel(self.underlying_objects.values())
-            results = value_parallel(self.valuation_objects.values())
+            results = value_parallel(self.valuation_objects.values(),
+                                    fixed_seed=fixed_seed)
             delta_list = greeks_parallel(self.valuation_objects.values(),
                                         Greek='Delta')
             vega_list = greeks_parallel(self.valuation_objects.values(),
@@ -898,7 +903,7 @@ class derivatives_portfolio(object):
                 present_value = results[self.valuation_objects[pos].name]
             else:
                 present_value = self.valuation_objects[pos].present_value(
-                                fixed_seed = fixed_seed, accuracy=3)
+                                fixed_seed=fixed_seed, accuracy=3)
             pos_list.append(pos)
             pos_list.append(self.positions[pos].name)
             pos_list.append(self.positions[pos].quantity)
@@ -922,62 +927,105 @@ class derivatives_portfolio(object):
                 pos_list.append(str(delta_dict))
                 pos_list.append(str(vega_dict))
             else:
-                # delta per position
-                pos_list.append(self.valuation_objects[pos].delta()
-                                * self.positions[pos].quantity)
-                # vega per position
-                pos_list.append(self.valuation_objects[pos].vega()
-                                * self.positions[pos].quantity)
+                if self.parallel is True:
+                    # delta from parallel calculation
+                    pos_list.append(delta_list[pos] 
+                                   * self.positions[pos].quantity)
+                    # vega from parallel calculation
+                    pos_list.append(vega_list[pos]
+                                   * self.positions[pos].quantity)
+                else:
+                    # delta per position
+                    pos_list.append(self.valuation_objects[pos].delta()
+                                    * self.positions[pos].quantity)
+                    # vega per position
+                    pos_list.append(self.valuation_objects[pos].vega()
+                                    * self.positions[pos].quantity)
             res_list.append(pos_list)
-        res_df = pd.DataFrame(res_list, columns=['position', 'name', 'quantity',
-                                                 'otype', 'risk_facts', 'value',
+        res_df = pd.DataFrame(res_list, columns=['position', 'name',
+                                                 'quantity', 'otype',
+                                                 'risk_facts', 'value',
                                                  'currency', 'pos_value',
                                                  'pos_delta', 'pos_vega'])
         print 'Totals\n', res_df[['pos_value', 'pos_delta', 'pos_vega']].sum()
         return res_df
 
     def get_port_risk(self, Greek='Delta', low=0.8, high=1.2, step=0.1,
-                      fixed_seed=False, risk_factors=None):
+                      fixed_seed=None, risk_factors=None):
         ''' Calculating portfolio risk statistics. '''
         if risk_factors is None:
             risk_factors = self.underlying_objects.keys()
+        if fixed_seed is None:
+            fixed_seed = self.fixed_seed
         sensitivities = {}
         levels = np.arange(low, high + 0.01, step)
+        if self.parallel is True:
+            values = value_parallel(self.valuation_objects.values(),
+                                    fixed_seed=fixed_seed)
+            for key in self.valuation_objects:
+                values[key] *= self.positions[key].quantity
+        else:
+            values = {}
+            for key, obj in self.valuation_objects.items():
+                values[key] = obj.present_value() \
+                            * self.positions[key].quantity
+        import copy
         for rf in risk_factors:
-            underlying = self.underlying_objects[rf]
-            in_val = underlying.initial_value
-            in_vol = underlying.volatility
+            print '\n' + rf
+            in_val = self.underlying_objects[rf].initial_value
+            in_vol = self.underlying_objects[rf].volatility
             results = []
             for level in levels:
-                if Greek == 'Delta':
-                    underlying.update(initial_value=level * in_val)
-                elif Greek == 'Vega':
-                    underlying.update(volatility=level * in_vol)
-                else:
-                    raise NotImplementedError('Spelling error or not implemented.')
-                pos_list = []
-                if self.parallel is True:
-                    respara = value_parallel(self.valuation_objects.values())
-                    pos_list = [respara[self.valuation_objects[pos].name]
-                              * self.positions[pos].quantity
-                                for pos in self.valuation_objects]
-                else:
-                    for pos in self.valuation_objects:
-                        value = self.valuation_objects[pos].present_value(
-                                                    fixed_seed=fixed_seed)
-                        pos_list.append(value * self.positions[pos].quantity)
+                values_sens = copy.deepcopy(values)
+                print level,
+                if level == 1.0:
+                    pass
+                else:            
+                    for key, obj in self.valuation_objects.items():
+                        if rf in self.positions[key].underlyings:
+                            
+                            if self.positions[key].otype[-5:] == 'multi':
+                                if Greek == 'Delta':
+                                    obj.underlying_objects[rf].update(
+                                            initial_value=level * in_val)
+                                if Greek == 'Vega':
+                                    obj.underlying_objects[rf].update(
+                                            volatility=level * in_vol)
+                            
+                            else:
+                                if Greek == 'Delta':
+                                    obj.underlying.update(
+                                        initial_value=level * in_val)
+                                elif Greek == 'Vega':
+                                    obj.underlying.update(
+                                        volatility=level * in_vol)  
+
+                            values_sens[key] = obj.present_value(
+                                            fixed_seed=fixed_seed) \
+                                             * self.positions[key].quantity
+                            
+                            if self.positions[key].otype[-5:] == 'multi':
+                                obj.underlying_objects[rf].update(
+                                        initial_value=in_val)
+                                obj.underlying_objects[rf].update(
+                                        volatility=in_vol)
+
+                            else:
+                                obj.underlying.update(initial_value=in_val)
+                                obj.underlying.update(volatility=in_vol)
+                    
                 if Greek == 'Delta':
                     results.append((round(level * in_val, 2), 
-                                    sum(pos_list)))
+                                    sum(values_sens.values())))
                 if Greek == 'Vega':
                     results.append((round(level * in_vol, 2), 
-                                    sum(pos_list)))
+                                    sum(values_sens.values())))
+                                    
             sensitivities[rf + '_' + Greek] = pd.DataFrame(np.array(results),
                                             index=levels,
                                             columns=['factor', 'value'])
-            underlying.update(initial_value=in_val)
-            underlying.update(volatility=in_vol)
-        return pd.Panel(sensitivities)
+        print 2 * '\n'
+        return pd.Panel(sensitivities), sum(values.values())
 
 def risk_report(sensitivities, digits=2):
     for key in sensitivities:
@@ -988,14 +1036,13 @@ def risk_report(sensitivities, digits=2):
 import multiprocessing as mp
 
 
-def simulate_parallel(objs):
+def simulate_parallel(objs, fixed_seed=True):
     procs = []
     man = mp.Manager()
     output = man.Queue()
 
     def worker(o, output):
-        # print "I am %s" % o
-        o.generate_paths()
+        o.generate_paths(fixed_seed=fixed_seed)
         output.put((o.name, o))
     for o in objs:
         procs.append(mp.Process(target=worker, args=(o, output)))
@@ -1008,34 +1055,19 @@ def simulate_parallel(objs):
     return underlying_objects
 
 
-def value_parallel(objs):
+def value_parallel(objs, fixed_seed=True, full=False):
     procs = []
     man = mp.Manager()
     output = man.Queue()
 
     def worker(o, output):
-        # print "I am %s" % o
-        pv = o.present_value()
-        output.put((o.name, pv))
-    for o in objs:
-        procs.append(mp.Process(target=worker, args=(o, output)))
-    [pr.start() for pr in procs]
-    [pr.join() for pr in procs]
-    res_list = [output.get() for o in objs]
-    results = {}
-    for o in res_list:
-        results[o[0]] = o[1]
-    return results
+        if full is True:
+            pvs = o.present_value(fixed_seed=fixed_seed, full=True)[1]
+            output.put((o.name, pvs))
+        else:
+            pv = o.present_value(fixed_seed=fixed_seed)
+            output.put((o.name, pv))
 
-def present_values_parallel(objs):
-    procs = []
-    man = mp.Manager()
-    output = man.Queue()
-
-    def worker(o, output):
-        # print "I am %s" % o
-        pvs = o.present_value(full=True)[1]
-        output.put((o.name, pvs))
     for o in objs:
         procs.append(mp.Process(target=worker, args=(o, output)))
     [pr.start() for pr in procs]
@@ -1056,9 +1088,7 @@ def greeks_parallel(objs, Greek='Delta'):
             output.put((o.name, o.delta()))
         elif Greek == 'Vega':
             output.put((o.name, o.vega()))
-        else:
-            raise NotImplementedError('Spelling error or not implemented.')
-            
+
     for o in objs:
         procs.append(mp.Process(target=worker, args=(o, output)))
     [pr.start() for pr in procs]
