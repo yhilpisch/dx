@@ -23,6 +23,7 @@
 # along with this program. If not, see http://www.gnu.org/licenses/.
 #
 
+import matplotlib as mpl; mpl.use('agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from pylab import cm
@@ -52,7 +53,7 @@ def plot_option_stats(s_list, pv, de, ve):
     plt.plot(s_list, de, 'go', label='Delta')
     plt.plot(s_list, de, 'b')
     plt.grid(True); plt.legend(loc=0)
-    plt.setp(sub2.get_xticklabels(), visible=False) 
+    plt.setp(sub2.get_xticklabels(), visible=False)
     sub3 = plt.subplot(313)
     plt.plot(s_list, ve, 'yo', label='Vega')
     plt.plot(s_list, ve, 'b')
@@ -70,7 +71,7 @@ def plot_greeks_3d(inputs, labels):
         labels for x, y, z
     '''
     x, y, z = inputs
-    xl, yl, zl = labels 
+    xl, yl, zl = labels
     fig = plt.figure(figsize=(10, 7))
     ax = fig.gca(projection='3d')
     surf = ax.plot_surface(x, y, z, rstride=1, cstride=1,

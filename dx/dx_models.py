@@ -180,7 +180,7 @@ class geometric_brownian_motion(simulation_class):
                 ran = ran[self.rn_set]
             dt = (self.time_grid[t] - self.time_grid[t - 1]).days / day_count
               # difference between two dates as year fraction
-            rt = (forward_rates[t - 1] + forward_rates[t]) / 2 
+            rt = (forward_rates[t - 1] + forward_rates[t]) / 2
             paths[t] = paths[t - 1] * np.exp((rt - 0.5
                                               * self.volatility ** 2) * dt
                                     + self.volatility * np.sqrt(dt) * ran)
@@ -238,7 +238,7 @@ class jump_diffusion(simulation_class):
         if self.time_grid is None:
             self.generate_time_grid()
             # method from generic model simulation class
-        # number of dates for time grid 
+        # number of dates for time grid
         M = len(self.time_grid)
         # number of paths
         I = self.paths
@@ -281,7 +281,7 @@ class jump_diffusion(simulation_class):
             paths[t] = paths[t - 1] * (np.exp((rt - rj-
                                         0.5 * self.volatility ** 2) * dt
                                     + self.volatility * np.sqrt(dt) * ran)
-                                    + (np.exp(self.mu + self.delt * 
+                                    + (np.exp(self.mu + self.delt *
                                         sn2[t]) - 1) * poi)
         self.instrument_values = paths
 
@@ -304,7 +304,7 @@ class stochastic_volatility(simulation_class):
     update :
         updates parameters
     generate_paths :
-        returns Monte Carlo paths for the market environment
+        returns Monte Carlo paths given the market environment
     get_volatility_values :
         returns array with simulated volatility paths
     '''
@@ -615,7 +615,7 @@ class stochastic_short_rate(object):
         name of the object
     mar_env : market_environment object
         containing all relevant parameters
-    
+
     Methods
     =======
     get_forward_rates :
@@ -665,7 +665,7 @@ class stochastic_short_rate(object):
 
 def srd_forwards(initial_value, (kappa, theta, sigma), time_grid):
     ''' Function for forward vols/rates in SRD model.
-    
+
     Parameters
     ==========
     initial_value: float
@@ -799,7 +799,7 @@ class square_root_jump_diffusion_plus(square_root_jump_diffusion):
     =======
     srd_forward_error :
         error function for forward rate/vols calibration
-    generate_shift_base : 
+    generate_shift_base :
         generates a shift base to take term structure into account
     update :
         updates parameters
@@ -829,7 +829,7 @@ class square_root_jump_diffusion_plus(square_root_jump_diffusion):
         f_model = srd_forwards(self.initial_value, p0,
                                self.term_structure[:, 0])
 
-        MSE = np.sum((self.term_structure[:, 1] 
+        MSE = np.sum((self.term_structure[:, 1]
                       - f_model) ** 2) / len(f_model)
         return MSE
 
@@ -915,6 +915,6 @@ class general_underlying(object):
         self.special_dates = []
         self.time_grid = val_env.get_list('time_grid')
         self.fit_model = None
-    
+
     def get_instrument_values(self, fixed_seed=False):
         return self.data.values
