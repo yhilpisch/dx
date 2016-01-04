@@ -102,12 +102,12 @@ class valuation_class_single(object):
             interval = self.underlying.initial_value / 50.
         # forward-difference approximation
         # calculate left value for numerical delta
-        value_left = self.present_value(fixed_seed=True)
+        value_left = self.present_value(fixed_seed=True, accuracy=10)
         # numerical underlying value for right value
         initial_del = self.underlying.initial_value + interval
         self.underlying.update(initial_value=initial_del)
         # calculate right value for numerical delta
-        value_right = self.present_value(fixed_seed=True)
+        value_right = self.present_value(fixed_seed=True, accuracy=10)
         # reset the initial_value of the simulation object
         self.underlying.update(initial_value=initial_del - interval)
         delta = (value_right - value_left) / interval
@@ -124,17 +124,75 @@ class valuation_class_single(object):
             interval = self.underlying.volatility / 50.
         # forward-difference approximation
         # calculate the left value for numerical vega
-        value_left = self.present_value(fixed_seed=True)
+        value_left = self.present_value(fixed_seed=True, accuracy=10)
         # numerical volatility value for right value
         vola_del = self.underlying.volatility + interval
         # update the simulation object
         self.underlying.update(volatility=vola_del)
         # calculate the right value of numerical vega
-        value_right = self.present_value(fixed_seed=True)
+        value_right = self.present_value(fixed_seed=True, accuracy=10)
         # reset volatility value of simulation object
         self.underlying.update(volatility=vola_del - interval)
         vega = (value_right - value_left) / interval
         return round(vega, accuracy)
+
+    def theta(self, interval=10, accuracy=4):
+        # calculate the left value for numerical theta
+        value_left = self.present_value(fixed_seed=True, accuracy=10)
+        # determine new pricing date
+        orig_date = self.pricing_date
+        new_date = orig_date + dt.timedelta(interval)
+        # update the simulation object
+        self.underlying.update(pricing_date=new_date)
+        # calculate the right value of numerical theta
+        self.pricing_date = new_date
+        value_right = self.present_value(fixed_seed=True, accuracy=10)
+        # reset pricing dates of sim & val objects
+        self.underlying.update(pricing_date=orig_date)
+        self.pricing_date = orig_date
+        # calculating the negative value by convention
+        # (i.e. a decrease in time-to-maturity)
+        theta = (value_right - value_left) / (interval / 365.)
+        return round(theta, accuracy)
+
+    def rho(self, interval=0.005, accuracy=4):
+        # calculate the left value for numerical rho
+        value_left = self.present_value(fixed_seed=True, accuracy=12)
+        if type(self.discount_curve) == constant_short_rate:
+            # adjust constant short rate factor
+            self.discount_curve.short_rate += interval
+            # delete instrument values (since drift changes)
+            if self.underlying.instrument_values is not None:
+                iv = True
+                store_underlying_values = self.underlying.instrument_values
+            self.underlying.instrument_values = None
+            # calculate the  right value for numerical rho
+            value_right = self.present_value(fixed_seed=True, accuracy=12)
+            # reset constant short rate factor
+            self.discount_curve.short_rate -= interval
+            if iv is True:
+                self.underlying.instrument_values = store_underlying_values
+            rho = (value_right - value_left) / interval
+            return round(rho, accuracy)
+        else:
+            raise NotImplementedError(
+                    'Not yet implemented for this short rate model.')
+
+    def gamma(self, interval=None, accuracy=4):
+        if interval is None:
+            interval = self.underlying.initial_value / 50.
+        # forward-difference approximation
+        # calculate left value for numerical gamma
+        value_left = self.delta()
+        # numerical underlying value for right value
+        initial_del = self.underlying.initial_value + interval
+        self.underlying.update(initial_value=initial_del)
+        # calculate right value for numerical delta
+        value_right = self.delta()
+        # reset the initial_value of the simulation object
+        self.underlying.update(initial_value=initial_del - interval)
+        gamma = (value_right - value_left) / interval
+        return round(gamma, accuracy)
 
 
 class valuation_mcs_european_single(valuation_class_single):
@@ -220,13 +278,13 @@ class valuation_mcs_american_single(valuation_class_single):
         Attributes
         ==========
         fixed_seed :
-            used same/fixed seed for valuation
+            use same/fixed seed for valuation
         '''
         try:
             strike = self.strike
         except:
             pass
-        paths = self.underlying.get_instrument_values(fixed_seed=fixed_seed) 
+        paths = self.underlying.get_instrument_values(fixed_seed=fixed_seed)
         time_grid = self.underlying.time_grid
         try:
             time_index_start = int(np.where(time_grid == self.pricing_date)[0])
@@ -296,7 +354,7 @@ class valuation_class_multi(object):
         correlations between underlyings
     payoff_func : string
         derivatives payoff in Python syntax
-        Example: 'np.maximum(maturity_value[key] - 100, 0)' 
+        Example: 'np.maximum(maturity_value[key] - 100, 0)'
         where maturity_value[key] is the NumPy vector with
         respective values of the underlying 'key' from the
         risk_factors dictionary
@@ -394,7 +452,7 @@ class valuation_class_multi(object):
                                           self.val_env.constants['paths']),
                                           fixed_seed=self.fixed_seed)
 
-                # adding all to valuation environment   
+                # adding all to valuation environment
                 self.val_env.add_list('cholesky_matrix', cholesky_matrix)
                 self.val_env.add_list('rn_set', rn_set)
                 self.val_env.add_list('random_numbers', random_numbers)
@@ -436,12 +494,12 @@ class valuation_class_multi(object):
         asset = self.underlying_objects[key]
         if interval is None:
             interval = asset.initial_value / 50.
-        value_left = self.present_value()
+        value_left = self.present_value(fixed_seed=True, accuracy=10)
         start_value = asset.initial_value
         initial_del = start_value + interval
         asset.update(initial_value=initial_del)
         self.get_instrument_values()
-        value_right = self.present_value()
+        value_right = self.present_value(fixed_seed=True, accuracy=10)
         asset.update(start_value)
         self.instrument_values = {}
         delta = (value_right - value_left) / interval
@@ -458,15 +516,24 @@ class valuation_class_multi(object):
         asset = self.underlying_objects[key]
         if interval < asset.volatility / 50.:
             interval = asset.volatility / 50.
-        value_left = self.present_value()
+        value_left = self.present_value(fixed_seed=True, accuracy=10)
         start_vola = asset.volatility
         vola_del = start_vola + interval
         asset.update(volatility=vola_del)
         self.get_instrument_values()
-        value_right = self.present_value()
+        value_right = self.present_value(fixed_seed=True, accuracy=10)
         asset.update(volatility=start_vola)
         self.instrument_values = {}
         return (value_right - value_left) / interval
+
+    def theta(self, key, interval=None):
+        raise NotImplementedError('Not yet implemented for multi-risk.')
+
+    def rho(self, key, interval=None):
+        raise NotImplementedError('Not yet implemented for multi-risk.')
+
+    def gamma(self, key, interval=None):
+        raise NotImplementedError('Not yet implemented for multi-risk.')
 
 
 class valuation_mcs_european_multi(valuation_class_multi):
@@ -507,7 +574,7 @@ class valuation_mcs_european_multi(valuation_class_multi):
 
     def present_value(self, accuracy=3, fixed_seed=True, full=False):
         cash_flow = self.generate_payoff(fixed_seed)
-        
+
         discount_factor = self.discount_curve.get_discount_factors(
                           self.time_grid, self.paths)[1][0]
 
@@ -529,7 +596,7 @@ class valuation_mcs_american_multi(valuation_class_multi):
     present_value :
         returns present value (Monte Carlo estimator)
     '''
-    def generate_payoff(self, fixed_seed=True): 
+    def generate_payoff(self, fixed_seed=True):
         self.get_instrument_values(fixed_seed=True)
         self.instrument_values = {key: name.instrument_values for key, name
                        in self.underlying_objects.items()}
@@ -674,7 +741,7 @@ class derivatives_portfolio(object):
         returns the full distribution of the simulated portfolio values
     get_statistics :
         returns a pandas DataFrame object with portfolio statistics
-    get_port_risk : 
+    get_port_risk :
         estimates sensitivities for point-wise parameter shocks
     '''
 
@@ -728,7 +795,7 @@ class derivatives_portfolio(object):
         # delete duplicate entries
         # & sort dates in time_grid
         time_grid = sorted(set(time_grid))
-        
+
         self.time_grid = np.array(time_grid)
         self.val_env.add_list('time_grid', self.time_grid)
 
@@ -929,7 +996,7 @@ class derivatives_portfolio(object):
             else:
                 if self.parallel is True:
                     # delta from parallel calculation
-                    pos_list.append(delta_list[pos] 
+                    pos_list.append(delta_list[pos]
                                    * self.positions[pos].quantity)
                     # vega from parallel calculation
                     pos_list.append(vega_list[pos]
@@ -980,10 +1047,10 @@ class derivatives_portfolio(object):
                 print level,
                 if level == 1.0:
                     pass
-                else:            
+                else:
                     for key, obj in self.valuation_objects.items():
                         if rf in self.positions[key].underlyings:
-                            
+
                             if self.positions[key].otype[-5:] == 'multi':
                                 if Greek == 'Delta':
                                     obj.underlying_objects[rf].update(
@@ -991,19 +1058,19 @@ class derivatives_portfolio(object):
                                 if Greek == 'Vega':
                                     obj.underlying_objects[rf].update(
                                             volatility=level * in_vol)
-                            
+
                             else:
                                 if Greek == 'Delta':
                                     obj.underlying.update(
                                         initial_value=level * in_val)
                                 elif Greek == 'Vega':
                                     obj.underlying.update(
-                                        volatility=level * in_vol)  
+                                        volatility=level * in_vol)
 
                             values_sens[key] = obj.present_value(
                                             fixed_seed=fixed_seed) \
                                              * self.positions[key].quantity
-                            
+
                             if self.positions[key].otype[-5:] == 'multi':
                                 obj.underlying_objects[rf].update(
                                         initial_value=in_val)
@@ -1013,19 +1080,35 @@ class derivatives_portfolio(object):
                             else:
                                 obj.underlying.update(initial_value=in_val)
                                 obj.underlying.update(volatility=in_vol)
-                    
+
                 if Greek == 'Delta':
-                    results.append((round(level * in_val, 2), 
+                    results.append((round(level * in_val, 2),
                                     sum(values_sens.values())))
                 if Greek == 'Vega':
-                    results.append((round(level * in_vol, 2), 
+                    results.append((round(level * in_vol, 2),
                                     sum(values_sens.values())))
-                                    
+
             sensitivities[rf + '_' + Greek] = pd.DataFrame(np.array(results),
                                             index=levels,
                                             columns=['factor', 'value'])
         print 2 * '\n'
         return pd.Panel(sensitivities), sum(values.values())
+
+    def get_deltas(self, net=True, low=0.9, high=1.1, step=0.05):
+        ''' Returns the deltas of the portfolio. Convenience function.'''
+        deltas, benchvalue = self.dx_port.get_port_risk(Greek='Delta',
+                                                low=low, high=high, step=step)
+        if net is True:
+            deltas.loc[:, :, 'value'] -= benchvalue
+        return deltas, benchvalue
+
+    def get_vegas(self, net=True, low=0.9, high=1.1, step=0.05):
+        ''' Returns the vegas of the portfolio. Convenience function.'''
+        vegas, benchvalue = self.dx_port.get_port_risk(Greek='Vega',
+                                                low=low, high=high, step=step)
+        if net is True:
+            vegas.loc[:, :, 'value'] -= benchvalue
+        return vegas, benchvalue
 
 def risk_report(sensitivities, digits=2):
     for key in sensitivities:
@@ -1134,7 +1217,7 @@ class var_derivatives_portfolio(derivatives_portfolio):
         self.val_env = val_env
         self.var_risk_factors = var_risk_factors
         self.underlyings = set()
-    
+
         self.time_grid = None
         self.underlying_objects = {}
         self.valuation_objects = {}
@@ -1168,7 +1251,7 @@ class var_derivatives_portfolio(derivatives_portfolio):
             time_grid.append(end)
         # delete duplicate entries & sort dates in time_grid
         time_grid = sorted(set(time_grid))
-        
+
         self.time_grid = np.array(time_grid)
         self.val_env.add_list('time_grid', self.time_grid)
 

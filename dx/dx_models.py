@@ -96,8 +96,10 @@ class simulation_class(object):
             time_grid.append(end)
             # insert end date if not in list
         if len(self.special_dates) > 0:
-            # add all special dates
-            time_grid.extend(self.special_dates)
+            # add all special dates later than self.pricing_date
+            add_dates = [d for d in self.special_dates
+                            if d > self.pricing_date]
+            time_grid.extend(add_dates)
             # delete duplicates and sort
             time_grid = sorted(set(time_grid))
         self.time_grid = np.array(time_grid)
@@ -136,7 +138,12 @@ class geometric_brownian_motion(simulation_class):
     def __init__(self, name, mar_env, corr=False):
         super(geometric_brownian_motion, self).__init__(name, mar_env, corr)
 
-    def update(self, initial_value=None, volatility=None, final_date=None):
+    def update(self, pricing_date=None, initial_value=None,
+                     volatility=None, final_date=None):
+        if pricing_date is not None:
+            self.pricing_date = pricing_date
+            self.time_grid = None
+            self.generate_time_grid()
         if initial_value is not None:
             self.initial_value = initial_value
         if volatility is not None:
@@ -218,8 +225,13 @@ class jump_diffusion(simulation_class):
         except:
             print "Error parsing market environment."
 
-    def update(self, initial_value=None, volatility=None, lamb=None,
-               mu=None, delta=None, final_date=None):
+    def update(self, pricing_date=None, initial_value=None,
+                volatility=None, lamb=None, mu=None, delta=None,
+                final_date=None):
+        if pricing_date is not None:
+            self.pricing_date = pricing_date
+            self.time_grid = None
+            self.generate_time_grid()
         if initial_value is not None:
             self.initial_value = initial_value
         if volatility is not None:
@@ -324,9 +336,12 @@ class stochastic_volatility(simulation_class):
         except:
             print "Error parsing market environment."
 
-    def update(self, initial_value=None, volatility=None,
-               vol_vol=None, kappa=None, theta=None,
-               final_date=None):
+    def update(self, pricing_date=None, initial_value=None, volatility=None,
+               vol_vol=None, kappa=None, theta=None, final_date=None):
+        if pricing_date is not None:
+            self.pricing_date = pricing_date
+            self.time_grid = None
+            self.generate_time_grid()
         if initial_value is not None:
             self.initial_value = initial_value
         if volatility is not None:
@@ -441,9 +456,13 @@ class stoch_vol_jump_diffusion(simulation_class):
         except:
             print "Error parsing market environment."
 
-    def update(self, initial_value=None, volatility=None,
+    def update(self, pricing_date=None, initial_value=None, volatility=None,
                vol_vol=None, kappa=None, theta=None, lamb=None,
                mu=None, delta=None, final_date=None):
+        if pricing_date is not None:
+            self.pricing_date = pricing_date
+            self.time_grid = None
+            self.generate_time_grid()
         if initial_value is not None:
             self.initial_value = initial_value
         if volatility is not None:
@@ -561,8 +580,11 @@ class square_root_diffusion(simulation_class):
         except:
             print "Error parsing market environment."
 
-    def update(self, initial_value=None, volatility=None, kappa=None,
-               theta=None, final_date=None):
+    def update(self, pricing_date=None, initial_value=None, volatility=None,        kappa=None, theta=None, final_date=None):
+        if pricing_date is not None:
+            self.pricing_date = pricing_date
+            self.time_grid = None
+            self.generate_time_grid()
         if initial_value is not None:
             self.initial_value = initial_value
         if volatility is not None:
@@ -606,9 +628,11 @@ class square_root_diffusion(simulation_class):
             paths[t] = np.maximum(0, paths_[t])
         self.instrument_values = paths
 
+
 class stochastic_short_rate(object):
     ''' Class for discounting based on stochastic short rates
     based on square-root diffusion process.
+
     Attributes
     ==========
     name : string
@@ -725,8 +749,13 @@ class square_root_jump_diffusion(simulation_class):
         except:
             print "Error parsing market environment."
 
-    def update(self, initial_value=None, volatility=None, kappa=None,
-               theta=None, lamb=None, mu=None, delt=None, final_date=None):
+    def update(self, pricing_date=None, initial_value=None, volatility=None,
+                kappa=None, theta=None, lamb=None, mu=None, delt=None,
+                final_date=None):
+        if pricing_date is not None:
+            self.pricing_date = pricing_date
+            self.time_grid = None
+            self.generate_time_grid()
         if initial_value is not None:
             self.initial_value = initial_value
         if volatility is not None:
@@ -781,6 +810,7 @@ class square_root_jump_diffusion(simulation_class):
                          * np.maximum(0, paths_[t - 1, :]) - rj * dt)
             paths[t, :] = np.maximum(0, paths_[t, :])
         self.instrument_values = paths
+
 
 class square_root_jump_diffusion_plus(square_root_jump_diffusion):
     ''' Class to generate simulated paths based on
@@ -903,6 +933,7 @@ class square_root_jump_diffusion_plus(square_root_jump_diffusion):
         sum2 = self.initial_value * ((4 * g ** 2 * np.exp(g * t)) /
             (2 * g + (self.kappa + g) * (np.exp(g * t) - 1)) ** 2)
         self.forward_rates = np.array(zip(time_grid, sum1 + sum2))
+
 
 class general_underlying(object):
     ''' Needed for VAR-based portfolio modeling and valuation. '''

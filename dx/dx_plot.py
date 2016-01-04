@@ -38,9 +38,9 @@ def plot_option_stats(s_list, pv, de, ve):
         set of intial values of the underlying
     pv : array or list
         present values
-    de : array of list
+    de : array or list
         results for deltas
-    ve : array of list
+    ve : array or list
         results for vega
     '''
     plt.figure(figsize=(9, 7))
@@ -57,8 +57,60 @@ def plot_option_stats(s_list, pv, de, ve):
     sub3 = plt.subplot(313)
     plt.plot(s_list, ve, 'yo', label='Vega')
     plt.plot(s_list, ve, 'b')
-    plt.xlabel('Initial Value of Underlying')
+    plt.xlabel('Strike')
     plt.grid(True); plt.legend(loc=0)
+
+
+def plot_option_stats_full(s_list, pv, de, ve, th, rh, ga):
+    ''' Plot option prices, deltas and vegas for a set of
+    different initial values of the underlying.
+
+    Parameters
+    ==========
+    s_list : array or list
+        set of intial values of the underlying
+    pv : array or list
+        present values
+    de : array or list
+        results for deltas
+    ve : array or list
+        results for vega
+    th : array or list
+        results for theta
+    rh : array or list
+        results for rho
+    ga : array or list
+        results for gamma
+    '''
+    plt.figure(figsize=(10, 14))
+    sub1 = plt.subplot(611)
+    plt.plot(s_list, pv, 'ro', label='Present Value')
+    plt.plot(s_list, pv, 'b')
+    plt.grid(True); plt.legend(loc=0)
+    plt.setp(sub1.get_xticklabels(), visible=False)
+    sub2 = plt.subplot(612)
+    plt.plot(s_list, de, 'go', label='Delta')
+    plt.plot(s_list, de, 'b')
+    plt.grid(True); plt.legend(loc=0)
+    plt.setp(sub2.get_xticklabels(), visible=False)
+    sub3 = plt.subplot(613)
+    plt.plot(s_list, ve, 'yo', label='Gamma')
+    plt.plot(s_list, ve, 'b')
+    plt.grid(True); plt.legend(loc=0)
+    sub4 = plt.subplot(614)
+    plt.plot(s_list, th, 'mo', label='Vega')
+    plt.plot(s_list, th, 'b')
+    plt.grid(True); plt.legend(loc=0)
+    sub5 = plt.subplot(615)
+    plt.plot(s_list, rh, 'co', label='Theta')
+    plt.plot(s_list, rh, 'b')
+    plt.grid(True); plt.legend(loc=0)
+    sub6 = plt.subplot(616)
+    plt.plot(s_list, ga, 'ko', label='Rho')
+    plt.plot(s_list, ga, 'b')
+    plt.xlabel('Strike')
+    plt.grid(True); plt.legend(loc=0)
+
 
 def plot_greeks_3d(inputs, labels):
     ''' Plot Greeks in 3d.
@@ -80,6 +132,7 @@ def plot_greeks_3d(inputs, labels):
     ax.set_ylabel(yl)
     ax.set_zlabel(zl)
     fig.colorbar(surf, shrink=0.5, aspect=5)
+
 
 def plot_calibration_results(cali, relative=False):
     ''' Plot calibration results.
