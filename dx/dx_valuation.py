@@ -500,7 +500,7 @@ class valuation_class_multi(object):
         asset.update(initial_value=initial_del)
         self.get_instrument_values()
         value_right = self.present_value(fixed_seed=True, accuracy=10)
-        asset.update(start_value)
+        asset.update(initial_value=start_value)
         self.instrument_values = {}
         delta = (value_right - value_left) / interval
         if delta < -1.0:
