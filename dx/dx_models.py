@@ -140,6 +140,7 @@ class geometric_brownian_motion(simulation_class):
 
     def update(self, pricing_date=None, initial_value=None,
                      volatility=None, final_date=None):
+        ''' Updates model parameters. '''
         if pricing_date is not None:
             self.pricing_date = pricing_date
             self.time_grid = None
@@ -153,6 +154,7 @@ class geometric_brownian_motion(simulation_class):
         self.instrument_values = None
 
     def generate_paths(self, fixed_seed=False, day_count=365.):
+        ''' Generates Monte Carlo paths for the model. '''
         if self.time_grid is None:
             self.generate_time_grid()
             # method from generic model simulation class
