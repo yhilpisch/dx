@@ -55,8 +55,14 @@ class valuation_class_single(object):
         updates selected valuation parameters
     delta :
         returns the delta of the derivative
+    gamma :
+        returns the gamma of the derivative
     vega :
         returns the vega of the derivative
+    theta :
+        returns the theta of the derivative
+    rho :
+        returns the rho of the derivative
     '''
 
     def __init__(self, name, underlying, mar_env, payoff_func=''):
@@ -121,6 +127,23 @@ class valuation_class_single(object):
         else:
             return round(delta, accuracy)
 
+    def gamma(self, interval=None, accuracy=4):
+        ''' Returns the gamma for the derivative. '''
+        if interval is None:
+            interval = self.underlying.initial_value / 50.
+        # forward-difference approximation
+        # calculate left value for numerical gamma
+        value_left = self.delta()
+        # numerical underlying value for right value
+        initial_del = self.underlying.initial_value + interval
+        self.underlying.update(initial_value=initial_del)
+        # calculate right value for numerical delta
+        value_right = self.delta()
+        # reset the initial_value of the simulation object
+        self.underlying.update(initial_value=initial_del - interval)
+        gamma = (value_right - value_left) / interval
+        return round(gamma, accuracy)
+
     def vega(self, interval=0.01, accuracy=4):
         ''' Returns the vega for the derivative. '''
         if interval < self.underlying.volatility / 50.:
@@ -182,23 +205,6 @@ class valuation_class_single(object):
         else:
             raise NotImplementedError(
                     'Not yet implemented for this short rate model.')
-
-    def gamma(self, interval=None, accuracy=4):
-        ''' Returns the gamma for the derivative. '''
-        if interval is None:
-            interval = self.underlying.initial_value / 50.
-        # forward-difference approximation
-        # calculate left value for numerical gamma
-        value_left = self.delta()
-        # numerical underlying value for right value
-        initial_del = self.underlying.initial_value + interval
-        self.underlying.update(initial_value=initial_del)
-        # calculate right value for numerical delta
-        value_right = self.delta()
-        # reset the initial_value of the simulation object
-        self.underlying.update(initial_value=initial_del - interval)
-        gamma = (value_right - value_left) / interval
-        return round(gamma, accuracy)
 
     def dollar_gamma(self, key, interval=None, accuracy=4):
         ''' Returns the dollar gamma for the derivative. '''
@@ -450,7 +456,7 @@ class valuation_class_multi(object):
                 self.val_env.add_list('rn_set', rn_set)
                 self.val_env.add_list('random_numbers', random_numbers)
             self.generate_underlying_objects()
-            
+
 
     def generate_time_grid(self):
         ''' Generats time grid for all relevant objects. '''
@@ -541,6 +547,26 @@ class valuation_class_multi(object):
         else:
             return round(delta, accuracy)
 
+    def gamma(self, key, interval=None, accuracy=4):
+        ''' Returns the gamma for the specified risk factor for the derivative. '''
+        if len(self.instrument_values) == 0:
+            self.get_instrument_values()
+        asset = self.underlying_objects[key]
+        if interval is None:
+            interval = asset.initial_value / 50.
+        # forward-difference approximation
+        # calculate left value for numerical gamma
+        value_left = self.delta(key=key)
+        # numerical underlying value for right value
+        initial_del = asset.initial_value + interval
+        asset.update(initial_value=initial_del)
+        # calculate right value for numerical delta
+        value_right = self.delta(key=key)
+        # reset the initial_value of the simulation object
+        asset.update(initial_value=initial_del - interval)
+        gamma = (value_right - value_left) / interval
+        return round(gamma, accuracy)
+
     def vega(self, key, interval=0.01, accuracy=4):
         ''' Returns the vega for the specified risk factor. '''
         if len(self.instrument_values) == 0:
@@ -601,26 +627,6 @@ class valuation_class_multi(object):
         else:
             raise NotImplementedError(
                     'Not yet implemented for this short rate model.')
-
-    def gamma(self, key, interval=None, accuracy=4):
-        ''' Returns the gamma for the specified risk factor for the derivative. '''
-        if len(self.instrument_values) == 0:
-            self.get_instrument_values()
-        asset = self.underlying_objects[key]
-        if interval is None:
-            interval = asset.initial_value / 50.
-        # forward-difference approximation
-        # calculate left value for numerical gamma
-        value_left = self.delta(key=key)
-        # numerical underlying value for right value
-        initial_del = asset.initial_value + interval
-        asset.update(initial_value=initial_del)
-        # calculate right value for numerical delta
-        value_right = self.delta(key=key)
-        # reset the initial_value of the simulation object
-        asset.update(initial_value=initial_del - interval)
-        gamma = (value_right - value_left) / interval
-        return round(gamma, accuracy)
 
     def dollar_gamma(self, key, interval=None, accuracy=4):
         ''' Returns the dollar gamma for the specified risk factor. '''
@@ -796,7 +802,9 @@ models = {'gbm' : geometric_brownian_motion,
           'jd' : jump_diffusion,
           'sv' : stochastic_volatility,
           'svjd' : stoch_vol_jump_diffusion,
+          'sabr' : sabr_stochastic_volatility,
           'srd' : square_root_diffusion,
+          'mrd' : mean_reverting_diffusion,
           'srjd' : square_root_jump_diffusion,
           'srjd+' : square_root_jump_diffusion_plus}
 
