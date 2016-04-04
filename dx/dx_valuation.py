@@ -425,20 +425,25 @@ class valuation_class_multi(object):
             self.generate_time_grid()
 
         if portfolio is False:
-            if correlations is not None:
+            if self.correlations is not None:
                 ul_list = sorted(self.risk_factors)
-                correlation_matrix = np.zeros((len(ul_list), len(ul_list)))
-                np.fill_diagonal(correlation_matrix, 1.0)
-                correlation_matrix = pd.DataFrame(correlation_matrix,
-                                     index=ul_list, columns=ul_list)
-                for corr in correlations:
-                    if corr[2] >= 1.0:
-                        corr[2] = 0.999999999999
-                    correlation_matrix[corr[0]].ix[corr[1]] = corr[2]
-                    correlation_matrix[corr[1]].ix[corr[0]] = corr[2]
-                self.correlation_matrix = correlation_matrix
-                cholesky_matrix = np.linalg.cholesky(
-                    np.array(correlation_matrix))
+                if isinstance(self.correlations, list):
+                    correlation_matrix = np.zeros((len(ul_list), len(ul_list)))
+                    np.fill_diagonal(correlation_matrix, 1.0)
+                    correlation_matrix = pd.DataFrame(correlation_matrix,
+                                         index=ul_list, columns=ul_list)
+                    for corr in correlations:
+                        if corr[2] >= 1.0:
+                            corr[2] = 0.999999999999
+                        correlation_matrix[corr[0]].ix[corr[1]] = corr[2]
+                        correlation_matrix[corr[1]].ix[corr[0]] = corr[2]
+                    self.correlation_matrix = correlation_matrix
+                    cholesky_matrix = np.linalg.cholesky(
+                        np.array(correlation_matrix))
+                else:
+                    # if correlation matrix was already given as pd.DataFrame
+                    cholesky_matrix = np.linalg.cholesky(np.array(
+                                                    self.correlations))
 
                 # dictionary with index positions
                 rn_set = {}
