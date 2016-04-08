@@ -459,7 +459,7 @@ class stoch_vol_jump_diffusion(simulation_class):
             print "Error parsing market environment."
 
     def update(self, pricing_date=None, initial_value=None, volatility=None,
-               vol_vol=None, kappa=None, theta=None, lamb=None,
+               vol_vol=None, kappa=None, theta=None, rho=None, lamb=None,
                mu=None, delta=None, final_date=None):
         if pricing_date is not None:
             self.pricing_date = pricing_date
@@ -475,6 +475,8 @@ class stoch_vol_jump_diffusion(simulation_class):
             self.kappa = kappa
         if theta is not None:
             self.theta = theta
+        if rho is not None:
+            self.rho = rho
         if lamb is not None:
             self.lamb = lamb
         if mu is not None:
