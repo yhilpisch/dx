@@ -14,7 +14,7 @@
 # or warranties, to the extent permitted by applicable law.
 #
 from dx_frame import *
-import pandas.io.data as web
+from pandas_datareader import data as web
 import math
 import scipy.optimize as sco
 import scipy.interpolate as sci

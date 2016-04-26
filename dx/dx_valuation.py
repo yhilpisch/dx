@@ -1216,10 +1216,13 @@ class derivatives_portfolio(object):
             vegas.loc[:, :, 'value'] -= benchvalue
         return vegas, benchvalue
 
-def risk_report(sensitivities, digits=2):
-    for key in sensitivities:
-        print '\n' + key
-        print np.round(sensitivities[key].transpose(), digits)
+def risk_report(sensitivities, digits=2, gross=True):
+    if gross is True:
+        for key in sensitivities:
+            print '\n' + key
+            print np.round(sensitivities[key].transpose(), digits)
+    else:
+        print np.round(sensitivities, digits)
 
 
 import multiprocessing as mp
