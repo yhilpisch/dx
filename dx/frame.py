@@ -2,7 +2,7 @@
 # DX Analytics
 # Framework Classes and Functions
 # dx_frame.py
-# 
+#
 #
 # DX Analytics is a financial analytics library, mainly for
 # derviatives modeling and pricing by Monte Carlo simulation
@@ -23,7 +23,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see http://www.gnu.org/licenses/.
 #
-
 import math
 import numpy as np
 import pandas as pd
@@ -33,10 +32,11 @@ import scipy.optimize as sco
 
 # Helper functions
 
+
 def get_year_deltas(time_list, day_count=365.):
     ''' Return vector of floats with time deltas in years.
     Initial value normalized to zero.
-    
+
     Parameters
     ==========
     time_list : list or array
@@ -44,7 +44,7 @@ def get_year_deltas(time_list, day_count=365.):
     day_count : float
         number of days for a year
         (to account for different conventions)
-    
+
     Results
     =======
     delta_list : array
@@ -63,7 +63,7 @@ def sn_random_numbers(shape, antithetic=True, moment_matching=True,
                       fixed_seed=False):
     ''' Return an array of shape "shape" with (pseudo-) random numbers
     which are standard normally distributed.
-    
+
     Parameters
     ==========
     shape : tuple (o, n, m)
@@ -74,7 +74,7 @@ def sn_random_numbers(shape, antithetic=True, moment_matching=True,
         matching of first and second moments
     fixed_seed : boolean
         flag to fix the seed
-    
+
     Results
     =======
     ran : (o, n, m) array of (pseudo-)random numbers
@@ -82,7 +82,8 @@ def sn_random_numbers(shape, antithetic=True, moment_matching=True,
     if fixed_seed is True:
         np.random.seed(1000)
     if antithetic is True:
-        ran = np.random.standard_normal((shape[0], shape[1], shape[2] / 2))
+        ran = np.random.standard_normal(
+            (shape[0], shape[1], int(shape[2] / 2)))
         ran = np.concatenate((ran, -ran), axis=2)
     else:
         ran = np.random.standard_normal(shape)
@@ -96,16 +97,17 @@ def sn_random_numbers(shape, antithetic=True, moment_matching=True,
 
 # Discounting classes
 
+
 class constant_short_rate(object):
     ''' Class for constant short rate discounting.
-    
+
     Attributes
     ==========
     name : string
         name of the object
     short_rate : float (positive)
         constant rate for discounting
-    
+
     Methods
     =======
     get_forward_rates :
@@ -120,7 +122,7 @@ class constant_short_rate(object):
         self.name = name
         self.short_rate = short_rate
         if short_rate < 0:
-            raise ValueError, 'Short rate negative.'
+            raise ValueError('Short rate negative.')
 
     def get_forward_rates(self, time_list, paths=None, dtobjects=True):
         ''' time_list either list of datetime objects or list of
@@ -141,23 +143,24 @@ class constant_short_rate(object):
 class deterministic_short_rate(object):
     ''' Class for discounting based on deterministic short rates,
     derived from a term structure of zero-coupon bond yields
-    
+
     Attributes
     ==========
     name : string
         name of the object
     yield_list : list/array of (time, yield) tuples
         input yields with time attached
-    
+
     Methods
     =======
-    get_interpolated_yields : 
+    get_interpolated_yields :
         return interpolated yield curve given a time list/array
     get_forward_rates :
         return forward rates given a time list/array
     get_discount_factors :
         return discount factors given a time list/array
     '''
+
     def __init__(self, name, yield_list):
         self.name = name
         self.yield_list = np.array(yield_list)
@@ -201,8 +204,8 @@ class deterministic_short_rate(object):
         for no in range(len(dlist)):
             factor = 0.0
             for d in range(no, len(dlist) - 1):
-                factor += ((dlist[d + 1] - dlist[d])
-                        * (0.5 * (forward_rate[d + 1] + forward_rate[d])))
+                factor += ((dlist[d + 1] - dlist[d]) *
+                           (0.5 * (forward_rate[d + 1] + forward_rate[d])))
             discount_factors.append(np.exp(-factor))
         return time_list, discount_factors
 
@@ -211,14 +214,14 @@ class deterministic_short_rate(object):
 
 class market_environment(object):
     ''' Class to model a market environment relevant for valuation.
-    
+
     Attributes
     ==========
     name: string
         name of the market environment
     pricing_date : datetime object
         date of the market environment
-    
+
     Methods
     =======
     add_constant :

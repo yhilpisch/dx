@@ -1,23 +1,33 @@
 #
-# DX Analytics Portfolio
-# dx_portfolio.py
+# DX Analytics
+# Mean Variance Portfolio
+# portfolio.py
+#
+#
+# DX Analytics is a financial analytics library, mainly for
+# derviatives modeling and pricing by Monte Carlo simulation
 #
 # (c) Dr. Yves J. Hilpisch
 # The Python Quants GmbH
-# You are not allowed to copy or distribute the dx library.
-# Rights are only granted for a limited period of time to
-# test the library in connection with the Python Quant Platform.
-# See also the terms and conditions under
-# http://analytics.quant-platform.com/documents/PQP_Terms_Conditions_Trial.pdf
 #
-# DX Analytics (the "dx library") comes with no representations
-# or warranties, to the extent permitted by applicable law.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or any later version.
 #
-from dx_frame import *
-from pandas_datareader import data as web
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see http://www.gnu.org/licenses/.
+#
 import math
+from .frame import *
 import scipy.optimize as sco
 import scipy.interpolate as sci
+from pandas_datareader import data as web
 
 
 class mean_variance_portfolio(object):
@@ -28,36 +38,36 @@ class mean_variance_portfolio(object):
     def __init__(self, name, mar_env):
         self.name = name
         try:
-            self.symbols = mar_env.get_list("symbols")
+            self.symbols = mar_env.get_list('symbols')
             self.start_date = mar_env.pricing_date
         except:
-            raise ValueError("Error parsing market environment.")
+            raise ValueError('Error parsing market environment.')
 
         self.number_of_assets = len(self.symbols)
         try:
-            self.final_date = mar_env.get_constant("final date")
+            self.final_date = mar_env.get_constant('final date')
         except:
             self.final_date = dt.date.today()
         try:
-            self.source = mar_env.get_constant("source")
+            self.source = mar_env.get_constant('source')
         except:
             self.source = 'google'
         try:
-            self.weights = mar_env.get_constant("weights")
+            self.weights = mar_env.get_constant('weights')
         except:
             self.weights = np.ones(self.number_of_assets, 'float')
             self.weights /= self.number_of_assets
         try:
             weights_sum = sum(self.weights)
         except:
-            msg = "Weights must be an iterable of numbers."
+            msg = 'Weights must be an iterable of numbers.'
             raise TypeError(msg)
 
         if round(weights_sum, 6) != 1:
-            raise ValueError("Sum of weights must be one.")
+            raise ValueError('Sum of weights must be one.')
 
         if len(self.weights) != self.number_of_assets:
-            msg = "Expected %s weights, got %s"
+            msg = 'Expected %s weights, got %s'
             raise ValueError(msg % (self.number_of_assets,
                                     len(self.weights)))
 
@@ -66,20 +76,19 @@ class mean_variance_portfolio(object):
         self.apply_weights()
 
     def __str__(self):
-        string = "Portfolio %s \n" % self.name
+        string = 'Portfolio %s \n' % self.name
         string += len(string) * '-' + '\n'
-        string += "return       %10.3f\n" % self.portfolio_return
-        string += "volatility   %10.3f\n" % math.sqrt(self.variance)
-        string += "Sharpe ratio %10.3f\n" % (self.portfolio_return /
+        string += 'return       %10.3f\n' % self.portfolio_return
+        string += 'volatility   %10.3f\n' % math.sqrt(self.variance)
+        string += 'Sharpe ratio %10.3f\n' % (self.portfolio_return /
                                              math.sqrt(self.variance))
-        string += "\n"
-        string += "Positions\n"
-        string += "symbol | weight | ret. con. \n"
-        string += "--------------------------- \n"
+        string += '\n'
+        string += 'Positions\n'
+        string += 'symbol | weight | ret. con. \n'
+        string += '--------------------------- \n'
         for i in range(len(self.symbols)):
-            string += "{:<6} | {:6.3f} | {:9.3f} \n".format(self.symbols[i],
-                                                            self.weights[i],
-                                                            self.mean_returns[i])
+            string += '{:<6} | {:6.3f} | {:9.3f} \n'.format(
+                self.symbols[i], self.weights[i], self.mean_returns[i])
 
         return string
 
@@ -89,26 +98,26 @@ class mean_variance_portfolio(object):
         '''
 
         self.data = pd.DataFrame()
-        # if self.source == "yahoo" or self.source == "google":
+        # if self.source == 'yahoo' or self.source == 'google':
         for sym in self.symbols:
             try:
                 self.data[sym] = web.DataReader(sym, self.source,
                                                 self.start_date,
                                                 self.final_date)['Close']
             except:
-                print "Can not find data for source %s and symbol %s." \
-                    % (self.source, sym)
-                print "Will try other source."
+                print('Can not find data for source %s and symbol %s.'
+                      % (self.source, sym))
+                print('Will try other source.')
                 try:
-                    if self.source == "yahoo":
-                        source = "google"
-                    if self.source == "google":
-                        source = "yahoo"
+                    if self.source == 'yahoo':
+                        source = 'google'
+                    if self.source == 'google':
+                        source = 'yahoo'
                     self.data[sym] = web.DataReader(sym, source,
                                                     self.start_date,
                                                     self.final_date)['Close']
                 except:
-                    msg = "Can not find data for source %s and symbol %s"
+                    msg = 'Can not find data for source %s and symbol %s'
                     raise IOError(msg % (source, sym))
         self.data.columns = self.symbols
         # To do: add more sources
@@ -124,7 +133,7 @@ class mean_variance_portfolio(object):
 
     def apply_weights(self):
         '''
-         Applies weights to the raw returns and covariances
+        Applies weights to the raw returns and covariances
         '''
 
         self.returns = self.raw_returns * self.weights
@@ -142,15 +151,15 @@ class mean_variance_portfolio(object):
         Please note:
         The method does not set the weight.
 
-        Parameter
-        ---------
+        Parameters
+        ==========
         weight: iterable,
             the weights of the portfolio content.
          '''
         weights = np.array(weights)
         portfolio_return = np.sum(self.raw_returns.mean() * weights) * 252
-        portfolio_vol = math.sqrt(np.dot(weights.T,
-                                  np.dot(self.raw_covariance * 252, weights)))
+        portfolio_vol = math.sqrt(
+            np.dot(weights.T, np.dot(self.raw_covariance * 252, weights)))
 
         return np.array([portfolio_return, portfolio_vol,
                          portfolio_return / portfolio_vol])
@@ -159,8 +168,8 @@ class mean_variance_portfolio(object):
         '''
         Sets new weights
 
-        Parameter
-        ---------
+        Parameters
+        ==========
         weights: interable
             new set of weights
         '''
@@ -169,14 +178,14 @@ class mean_variance_portfolio(object):
             weights = np.array(weights)
             weights_sum = sum(weights).round(3)
         except:
-            msg = "weights must be an interable of numbers"
+            msg = 'weights must be an interable of numbers'
             raise TypeError(msg)
 
         if weights_sum != 1:
-            raise ValueError("Sum of weights must be one")
+            raise ValueError('Sum of weights must be one')
 
         if len(weights) != self.number_of_assets:
-            msg = "Expected %s weights, got %s"
+            msg = 'Expected %s weights, got %s'
             raise ValueError(msg % (self.number_of_assets,
                                     len(weights)))
         self.weights = weights
@@ -246,7 +255,7 @@ class mean_variance_portfolio(object):
         if weights is not False:
             self.set_weights(weights)
         else:
-            raise ValueError("Optimization failed.")
+            raise ValueError('Optimization failed.')
 
     def get_capital_market_line(self, riskless_asset):
         '''
@@ -262,25 +271,25 @@ class mean_variance_portfolio(object):
         '''
         x, y = self.get_efficient_frontier(100)
         if len(x) == 1:
-            raise ValueError("Efficient Frontier seems to be constant.")
+            raise ValueError('Efficient Frontier seems to be constant.')
         f_eff = sci.UnivariateSpline(x, y, s=0)
         f_eff_der = f_eff.derivative(1)
 
         def tangent(x, rl=riskless_asset):
-            return f_eff_der(x)*x/(f_eff(x)-rl)-1
+            return f_eff_der(x) * x / (f_eff(x) - rl) - 1
 
         left_start = x[0]
         right_start = x[-1]
 
-        left, right = self.search_sign_changing(left_start, right_start,
-                                        tangent, right_start-left_start)
+        left, right = self.search_sign_changing(
+            left_start, right_start, tangent, right_start - left_start)
         if left == 0 and right == 0:
-            raise ValueError("Can not find tangent.")
+            raise ValueError('Can not find tangent.')
 
         zero_x = sco.brentq(tangent, left, right)
 
         opt_return = f_eff(zero_x)
-        cpl = lambda x: f_eff_der(zero_x)*x+riskless_asset
+        cpl = lambda x: f_eff_der(zero_x) * x + riskless_asset
         return cpl, zero_x, float(opt_return)
 
     def get_efficient_frontier(self, n):
@@ -294,26 +303,26 @@ class mean_variance_portfolio(object):
             number of points
         '''
         if type(n) is not int:
-            raise TypeError("n must be an int")
+            raise TypeError('n must be an int')
         if n < 3:
-            raise ValueError("n must be at least 3")
+            raise ValueError('n must be at least 3')
 
-        min_vol_weights = self.get_optimal_weights("Vol")
+        min_vol_weights = self.get_optimal_weights('Vol')
         min_vol = self.test_weights(min_vol_weights)[1]
-        min_return_weights = self.get_optimal_weights("Return",
+        min_return_weights = self.get_optimal_weights('Return',
                                                       constraint=min_vol)
         min_return = self.test_weights(min_return_weights)[0]
-        max_return_weights = self.get_optimal_weights("Return")
+        max_return_weights = self.get_optimal_weights('Return')
         max_return = self.test_weights(max_return_weights)[0]
 
-        delta = (max_return-min_return)/(n-1)
+        delta = (max_return - min_return) / (n - 1)
         if delta > 0:
-            returns = np.arange(min_return, max_return+delta, delta)
-            vols =list()
+            returns = np.arange(min_return, max_return + delta, delta)
+            vols = list()
             rets = list()
             for r in returns:
                 w = self.get_optimal_weights('Vol', constraint=r,
-                                             constraint_type="Exact")
+                                             constraint_type='Exact')
                 if w is not False:
                     result = self.test_weights(w)[:2]
                     rets.append(result[0])
@@ -324,57 +333,56 @@ class mean_variance_portfolio(object):
 
         return np.array(vols), np.array(rets)
 
-    def get_optimal_weights(self, target, constraint=None, constraint_type="Exact"):
-        '''
-        '''
-        if target == "Sharpe":
+    def get_optimal_weights(self, target, constraint=None,
+                            constraint_type='Exact'):
+        if target == 'Sharpe':
             def optimize_function(weights):
                 return -self.test_weights(weights)[2]
 
             cons = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
 
-        elif target == "Vol":
+        elif target == 'Vol':
             def optimize_function(weights):
                 return self.test_weights(weights)[1]
 
             cons = [{'type': 'eq', 'fun': lambda x: np.sum(x) - 1}, ]
             if constraint is not None:
                 d = dict()
-                if constraint_type == "Exact":
+                if constraint_type == 'Exact':
                     d['type'] = 'eq'
                     d['fun'] = lambda x: self.test_weights(x)[0] - constraint
                     cons.append(d)
-                elif constraint_type == "Bound":
+                elif constraint_type == 'Bound':
                     d['type'] = 'ineq'
                     d['fun'] = lambda x: self.test_weights(x)[0] - constraint
                     cons.append(d)
                 else:
-                    msg = "Value for constraint_type must be either "
-                    msg += "Exact or Bound, not %s" % constraint_type
+                    msg = 'Value for constraint_type must be either '
+                    msg += 'Exact or Bound, not %s' % constraint_type
                     raise ValueError(msg)
 
-        elif target == "Return":
+        elif target == 'Return':
             def optimize_function(weights):
                 return -self.test_weights(weights)[0]
 
             cons = [{'type': 'eq', 'fun': lambda x: np.sum(x) - 1}, ]
             if constraint is not None:
                 d = dict()
-                if constraint_type == "Exact":
+                if constraint_type == 'Exact':
                     d['type'] = 'eq'
                     d['fun'] = lambda x: self.test_weights(x)[1] - constraint
                     cons.append(d)
-                elif constraint_type == "Bound":
+                elif constraint_type == 'Bound':
                     d['type'] = 'ineq'
                     d['fun'] = lambda x: constraint - self.test_weights(x)[1]
                     cons.append(d)
                 else:
-                    msg = "Value for constraint_type must be either "
-                    msg += "Exact or Bound, not %s" % constraint_type
+                    msg = 'Value for constraint_type must be either '
+                    msg += 'Exact or Bound, not %s' % constraint_type
                     raise ValueError(msg)
 
         else:
-            raise ValueError("Unknown target %s" % target)
+            raise ValueError('Unknown target %s' % target)
 
         bounds = tuple((0, 1) for x in range(self.number_of_assets))
         start = self.number_of_assets * [1. / self.number_of_assets, ]
@@ -390,16 +398,17 @@ class mean_variance_portfolio(object):
     def search_sign_changing(self, l, r, f, d):
         if d < 0.000001:
             return (0, 0)
-        for x in np.arange(l, r+d, d):
-            if f(l)*f(x) < 0:
-                ret= (x-d, x)
+        for x in np.arange(l, r + d, d):
+            if f(l) * f(x) < 0:
+                ret = (x - d, x)
                 return ret
 
-        ret = self.search_sign_changing(l, r, f, d/2.)
+        ret = self.search_sign_changing(l, r, f, d / 2.)
         return ret
 
+
 if __name__ == '__main__':
-    ma = market_environment("ma", dt.date(2010, 1, 1))
-    ma.add_constant("symbols", ['AAPL', 'GOOG', 'MSFT', 'DB'])
-    ma.add_constant("final date", dt.date(2014, 3, 1))
-    port = mean_variance_portfolio("My Portfolio", ma)
+    ma = market_environment('ma', dt.date(2010, 1, 1))
+    ma.add_constant('symbols', ['AAPL', 'GOOG', 'MSFT', 'DB'])
+    ma.add_constant('final date', dt.date(2014, 3, 1))
+    port = mean_variance_portfolio('My Portfolio', ma)

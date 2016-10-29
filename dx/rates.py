@@ -22,8 +22,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see http://www.gnu.org/licenses/.
 #
-
-from dx_models import *
+from .frame import *
+from .models import *
 
 
 # Classes for simple interest rates products
@@ -58,7 +58,7 @@ class interest_rate_swap(object):
             self.payment_date = mar_env.get_constant('payment_date')
             self.payment_day = mar_env.get_constant('payment_day')
             self.termination_date = mar_env.get_constant('termination_date')
-            self.notional =  mar_env.get_constant('notional')
+            self.notional = mar_env.get_constant('notional')
             self.currency = mar_env.get_constant('currency')
             self.tenor = mar_env.get_constant('tenor')
             self.counting = mar_env.get_constant('counting')
@@ -69,12 +69,14 @@ class interest_rate_swap(object):
             self.discount_curve = underlying.discount_curve
             self.underlying = underlying
             self.payoff = None
-            
+
             # provide selected dates to underlying
             self.underlying.special_dates.extend([self.pricing_date,
-                self.effective_date, self.payment_date, self.termination_date])
+                                                  self.effective_date,
+                                                  self.payment_date,
+                                                  self.termination_date])
         except:
-            print "Error parsing market environment."
+            print('Error parsing market environment.')
 
         self.payment_dates = pd.date_range(self.payment_date,
                                            self.termination_date,
@@ -85,7 +87,7 @@ class interest_rate_swap(object):
         self.underlying.time_grid = None
         self.underlying.instrument_values = None
         self.underlying.special_dates.extend(
-                    self.payment_dates.to_pydatetime())
+            self.payment_dates.to_pydatetime())
 
     def generate_payoff(self, fixed_seed=True):
         ''' Generates the IRS payoff for simulated underlyin values. '''
@@ -124,8 +126,8 @@ def b1(kappa_r, theta_r, sigma_r, T):
     ''' Help Function. '''
     g = gamma(kappa_r, sigma_r)
     return (((2 * g * math.exp((kappa_r + g) * T / 2)) /
-            (2 * g + (kappa_r + g) * (math.exp(g * T) - 1)))
-            ** (2 * kappa_r * theta_r / sigma_r ** 2))
+             (2 * g + (kappa_r + g) * (math.exp(g * T) - 1))) **
+            (2 * kappa_r * theta_r / sigma_r ** 2))
 
 
 def b2(kappa_r, theta_r, sigma_r, T):
@@ -136,8 +138,8 @@ def b2(kappa_r, theta_r, sigma_r, T):
 
 
 def CIR_zcb_valuation(r0, kappa_r, theta_r, sigma_r, T):
-    ''' Function to value unit zero-coupon bonds in Cox-Ingersoll-Ross (1985) 
-    model.
+    ''' Function to value unit zero-coupon bonds in
+    Cox-Ingersoll-Ross (1985) model.
 
     Parameters
     ==========
