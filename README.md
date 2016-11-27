@@ -54,7 +54,7 @@ This book equips you with the **quantitative finance knowledge** needed to under
 
 ## Installation & Usage
 
-he most simple and efficient way to start using DX Analytics is by registering for the **Python Quant Platform** under http://trial.quant-platform.com (cf. the overview document http://quant-platform.com/Python_Quant_Platform.html).
+The most simple and efficient way to start using DX Analytics is by registering for the **Python Quant Platform** under http://trial.quant-platform.com (cf. the overview document http://quant-platform.com/Python_Quant_Platform.html).
 
 After registration, you will find a folder in your home directory called ``dx-analytics``. In this folder, you find **14 Jupyter Notebooks** which you can open by clicking on one of them and which are the sources for this documentation. You can interactively execute and easily adjust the code and the examples provided there.
 
