@@ -1,0 +1,11 @@
+language: python
+
+python:
+  - "3.6"
+  - "nightly"
+
+install:
+  - "pip install -e ."
+
+script:
+  - python setup.py bdist
