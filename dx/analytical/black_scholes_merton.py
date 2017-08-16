@@ -124,7 +124,7 @@ class BSM_european_option(object):
         d1 = ((log(self.initial_value / self.strike) +
                (self.short_rate + (0.5 * self.volatility ** 2)) * self.ttm) /
               (self.volatility * sqrt(self.ttm)))
-        vega = self.initial_value * stats.norm.cdf(d1, 0.0, 1.0) \
+        vega = self.initial_value * stats.norm.pdf(d1, 0.0, 1.0) \
             * sqrt(self.ttm)
         return vega
 

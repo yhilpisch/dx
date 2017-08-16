@@ -28,6 +28,3 @@ from .analytical import *
 from .portfolio import *
 from .plot import *
 from .rates import *
-
-# __all__ = ['stochastic_short_rate', 'constant_short_rate',
-#            'deterministic_short_rate']
