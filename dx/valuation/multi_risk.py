@@ -25,7 +25,7 @@
 from ..frame import *
 from ..models import *
 from .single_risk import models
-import statsmodels.api as sm
+# import statsmodels.api as sm
 
 
 class valuation_class_multi(object):
@@ -413,8 +413,10 @@ class valuation_mcs_american_multi(valuation_class_multi):
                 for asset_2 in instrument_values.keys():
                     matrix[asset_1 + asset_2] = instrument_values[asset_1][t] \
                         * instrument_values[asset_2][t]
-            rg = sm.OLS(V * df, np.array(list(matrix.values())).T).fit()
-            C = np.sum(rg.params * np.array(list(matrix.values())).T, axis=1)
+            # rg = sm.OLS(V * df, np.array(list(matrix.values())).T).fit()
+            rg = np.linalg.lstsq(np.array(list(matrix.values())).T, V * df)[0]
+            # C = np.sum(rg.params * np.array(list(matrix.values())).T, axis=1)
+            C = np.sum(rg * np.array(list(matrix.values())).T, axis=1)
             V = np.where(inner_values[t] > C, inner_values[t], V * df)
         df = discount_factors[0] / discount_factors[1]
         result = np.sum(df * V) / len(V)

@@ -1,7 +1,7 @@
 
 # DX Analytics
 
-DX Analytics is a **Python-based financial analytics library** (in its early stages) which allows the modeling of rather complex derivatives instruments and portfolios. Make sure to fully understand what you are using this library for and how to apply it. Please also read the license text and disclaimer.
+DX Analytics is a **Python-based financial analytics library** (mostly still in its early stages) which allows the modeling of rather complex derivatives instruments and portfolios. Make sure to fully understand what you are using this library for and how to apply it. Please also read the license text and disclaimer.
 
 
 ## Basic Philosophy
@@ -40,7 +40,7 @@ This book, published by O'Reilly in 2014 (cf. http://python-for-finance.com), is
 * Web technologies or
 * Python-Excel integration.
 
-The third part of the book **explains** and implements a sub-set of the classes and functions of **DX Analytics** as a larger case studies (about 100 pages).
+The third part of the book **explains** and implements a sub-set of the classes and functions of **DX Analytics** as a larger case study (about 100 pages).
 
 This books provides you with the **basic and advanced Python knowledge** needed to do Python in finance and to apply (and maybe integrate, enhance, improve) DX Analytics.
 
@@ -48,19 +48,19 @@ This books provides you with the **basic and advanced Python knowledge** needed 
 
 ![alt text](http://hilpisch.com/images/derivatives_analytics_front.jpg "Wiley Book")
 
-This book---published by Wiley Finance (cf. http://derivatives-analytics-with-python.com) with the sub-title "Data Analysis, Models, Simulation, Calibration, Hedging"---introduces into the **market-based valuation of financial derivatives** and explains what models can be used (e.g. stochastic volatiltiy jump diffusions), how to discretize them and how to simulate paths for such models. It also shows how to calibrate those models parametrically to market observed options quotes and implied volatilities. The book also introduces basic numerical hedging schemes for non-vanilla instruments based on advanced financial models. The approach is a practical one in that all topics are illustrated by a self-contained set of Python scripts.
+This book---published by Wiley Finance (cf. http://derivatives-analytics-with-python.com) with the sub-title "Data Analysis, Models, Simulation, Calibration, Hedging"---introduces into the **market-based valuation of financial derivatives** and explains what models can be used (e.g. stochastic volatility jump diffusions), how to discretize them and how to simulate paths for such models. It also shows how to calibrate those models parametrically to market observed options quotes and implied volatilities. The book also introduces basic numerical hedging schemes for non-vanilla instruments based on advanced financial models. The approach is a practical one in that all topics are illustrated by a self-contained set of Python scripts.
 
 This book equips you with the **quantitative finance knowledge** needed to understand the general valuation approach and to apply the financial models provided by DX Analytics. For example, the book intensively discusses the discretization and simulation of such models like the square-root diffusion of Cox-Ingersoll-Ross (1985) or the stochastic volatility model of Heston (1993) as well as their calibration to market data.
 
 ## Installation & Usage
 
-he most simple and efficient way to start using DX Analytics is by registering for the **Python Quant Platform** under http://trial.quant-platform.com (cf. the overview document http://quant-platform.com/Python_Quant_Platform.html).
+he most simple and efficient way to start using DX Analytics is by registering for the **Quant Platform** under http://pqp.io.
 
 After registration, you will find a folder in your home directory called ``dx-analytics``. In this folder, you find **14 Jupyter Notebooks** which you can open by clicking on one of them and which are the sources for this documentation. You can interactively execute and easily adjust the code and the examples provided there.
 
-At this stage, the library is provided to allow interested, potential users a **preview** of DX Analytics. It is recommended to get in touch with The Python Quants Group (via dx@tpq.io) before you start using the library for somthing serious.
+At this stage, the library is provided to allow interested, potential users a **easy way** to get started with DX Analytics. It is recommended to get in touch with The Python Quants Group (via dx@tpq.io) before you start using the library for something serious.
 
-DX Analytics has no dependencies apart from a few standard libraries (e.g. NumPy, pandas, matplotlib). It can be used generally with any of the popular scientific Python distributions, like **Anaconda** (cf. http://continuum.io/downloads).
+DX Analytics has no dependencies apart from a few standard libraries (e.g. NumPy, pandas, matplotlib). It can be used generally with any of the popular scientific Python distributions, such **Anaconda** (cf. http://anaconda.com).
 
 You find all you need in the Github repository http://github.com/yhilpisch/dx. Simply clone the directory to your local/remote machine, navigate to the folder and use the notebooks provided. You should also copy the library folder ``dx`` to your ``site-packages`` directory of your Python distribution for easy importing.
 
@@ -70,7 +70,7 @@ Although the focus of DX Analytics lies on the simulation and valuation of deriv
 
 * support for multi-currency derivatives and portfolios
 * several features to model more exotic payoffs (e.g. barriers)
-* standardized model calibration classes/funtions
+* standardized model calibration classes/functions
 * more sophisticated models for the pricing of rate-sensitive instruments
 
 To put it the other way round, the **strengths of DX Analytics** at the moment are the modeling, pricing and risk management of **single-currency equity-based derivatives and portfolios thereof**. In this regard, the library has some features to offer that are hard to find in other libraries (also commercial ones).
@@ -89,9 +89,9 @@ Fortunately, there are at least some ways to implement **sanity checks**. This i
 
 ## Questions and Support
 
-Yves Hilpisch, the author of DX Analytics, is managing partner of The Python Quants GmbH (Germany) and co-founder of The Python Quants LLC (New York City). The group provides professional support for the DX Analytics library. For inquiries in this regard contact dx@tpq.io.
+Yves Hilpisch, the author of DX Analytics, is managing partner of The Python Quants GmbH (Germany). The group provides professional support for the DX Analytics library. For inquiries in this regard contact dx@tpq.io.
 
-The Python Quants also provide the **Python Quant Platform** as a solution for browser-based, interactive, collaborative financial analytics (cf. http://quant-platform.com). On this platform (for which free trials are available) you can also immediately use DX Analytics.
+The Python Quants also provide the **Quant Platform** as a solution for browser-based, interactive, collaborative financial analytics (see http://pqp.io) and a suite of online training classes (see http://training.tpq.io). On the Quant Platform (for which free trials are available), you can also immediately use DX Analytics.
 
 ## Documentation
 
@@ -108,10 +108,12 @@ Public License version 3 or later (see http://www.gnu.org/licenses/).
 DX Analytics comes with no representations or warranties, to the extent
 permitted by applicable law.
 
-http://tpq.io \| team@tpq.io \|
+http://tpq.io \| dx@tpq.io \|
 http://twitter.com/dyjh
 
-**Quant Platform** \| http://quant-platform.com
+**Quant Platform** \| http://pqp.io
+
+**Python for Finance training** \| http://training.tpq.io
 
 **Derivatives Analytics with Python (Wiley Finance)** \|
 http://derivatives-analytics-with-python.com

@@ -27,6 +27,7 @@ from ..models import *
 from .single_risk import *
 from .multi_risk import *
 from .parallel_valuation import *
+import warnings; warnings.simplefilter('ignore')
 
 
 class derivatives_position(object):
@@ -473,7 +474,7 @@ class derivatives_portfolio(object):
             sensitivities[rf + '_' + Greek] = pd.DataFrame(
                 np.array(results), index=levels, columns=['factor', 'value'])
         print(2 * '\n')
-        return pd.Panel(sensitivities), sum(values.values())
+        return pd.Panel(sensitivities).to_frame(), sum(values.values())
 
     def get_deltas(self, net=True, low=0.9, high=1.1, step=0.05):
         ''' Returns the deltas of the portfolio. Convenience function.'''

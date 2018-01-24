@@ -27,7 +27,7 @@ import math
 from .frame import *
 import scipy.optimize as sco
 import scipy.interpolate as sci
-from pandas_datareader import data as web
+
 
 
 class mean_variance_portfolio(object):
@@ -37,6 +37,8 @@ class mean_variance_portfolio(object):
 
     def __init__(self, name, mar_env):
         self.name = name
+        self.data_source = 'http://hilpisch.com/tr_eikon_eod_data.csv'
+        self.get_raw_data()
         try:
             self.symbols = mar_env.get_list('symbols')
             self.start_date = mar_env.pricing_date
@@ -71,7 +73,7 @@ class mean_variance_portfolio(object):
             raise ValueError(msg % (self.number_of_assets,
                                     len(self.weights)))
 
-        self.load_data()
+        self.data = self.raw_data[self.symbols]
         self.make_raw_stats()
         self.apply_weights()
 
@@ -92,35 +94,43 @@ class mean_variance_portfolio(object):
 
         return string
 
-    def load_data(self):
-        '''
-        Loads asset values from the web.
-        '''
+    def get_raw_data(self):
+        self.raw_data = pd.read_csv(self.data_source, index_col=0,
+            parse_dates=True)
+        self.available_symbols = self.raw_data.columns
 
-        self.data = pd.DataFrame()
-        # if self.source == 'yahoo' or self.source == 'google':
-        for sym in self.symbols:
-            try:
-                self.data[sym] = web.DataReader(sym, self.source,
-                                                self.start_date,
-                                                self.final_date)['Close']
-            except:
-                print('Can not find data for source %s and symbol %s.'
-                      % (self.source, sym))
-                print('Will try other source.')
-                try:
-                    if self.source == 'yahoo':
-                        source = 'google'
-                    if self.source == 'google':
-                        source = 'yahoo'
-                    self.data[sym] = web.DataReader(sym, source,
-                                                    self.start_date,
-                                                    self.final_date)['Close']
-                except:
-                    msg = 'Can not find data for source %s and symbol %s'
-                    raise IOError(msg % (source, sym))
-        self.data.columns = self.symbols
-        # To do: add more sources
+    def get_available_symbols(self):
+        return self.available_symbols
+
+    # def load_data(self):
+    #     '''
+    #     Loads asset values from the web.
+    #     '''
+
+    #     self.data = pd.DataFrame()
+    #     # if self.source == 'yahoo' or self.source == 'google':
+    #     for sym in self.symbols:
+    #         try:
+    #             self.data[sym] = web.DataReader(sym, self.source,
+    #                                             self.start_date,
+    #                                             self.final_date)['Close']
+    #         except:
+    #             print('Can not find data for source %s and symbol %s.'
+    #                   % (self.source, sym))
+    #             print('Will try other source.')
+    #             try:
+    #                 if self.source == 'yahoo':
+    #                     source = 'google'
+    #                 if self.source == 'google':
+    #                     source = 'yahoo'
+    #                 self.data[sym] = web.DataReader(sym, source,
+    #                                                 self.start_date,
+    #                                                 self.final_date)['Close']
+    #             except:
+    #                 msg = 'Can not find data for source %s and symbol %s'
+    #                 raise IOError(msg % (source, sym))
+    #     self.data.columns = self.symbols
+    #     # To do: add more sources
 
     def make_raw_stats(self):
         '''
@@ -178,7 +188,7 @@ class mean_variance_portfolio(object):
             weights = np.array(weights)
             weights_sum = sum(weights).round(3)
         except:
-            msg = 'weights must be an interable of numbers'
+            msg = 'weights must be an iterable of numbers'
             raise TypeError(msg)
 
         if weights_sum != 1:
