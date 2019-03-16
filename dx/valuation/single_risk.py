@@ -253,11 +253,11 @@ class valuation_mcs_european_single(valuation_class_single):
             print('Maturity date not in time grid of underlying.')
         maturity_value = paths[time_index]
         # average value over whole path
-        mean_value = np.mean(paths[:time_index], axis=1)
+        mean_value = np.mean(paths[:time_index], axis=0)
         # maximum value over whole path
-        max_value = np.amax(paths[:time_index], axis=1)[-1]
+        max_value = np.amax(paths[:time_index], axis=0)
         # minimum value over whole path
-        min_value = np.amin(paths[:time_index], axis=1)[-1]
+        min_value = np.amin(paths[:time_index], axis=0)
         try:
             payoff = eval(self.payoff_func)
             return payoff
