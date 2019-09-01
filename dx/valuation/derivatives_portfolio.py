@@ -27,6 +27,8 @@ from ..models import *
 from .single_risk import *
 from .multi_risk import *
 from .parallel_valuation import *
+
+import xarray as xr  # replacement for pd.Panel
 import warnings; warnings.simplefilter('ignore')
 
 
@@ -427,7 +429,7 @@ class derivatives_portfolio(object):
             results = []
             for level in levels:
                 values_sens = copy.deepcopy(values)
-                print(level)
+                print(round(level, 4))
                 if level == 1.0:
                     pass
                 else:
@@ -474,7 +476,8 @@ class derivatives_portfolio(object):
             sensitivities[rf + '_' + Greek] = pd.DataFrame(
                 np.array(results), index=levels, columns=['factor', 'value'])
         print(2 * '\n')
-        return pd.Panel(sensitivities).to_frame(), sum(values.values())
+        df = xr.Dataset(sensitivities).to_dataframe()  # replacing pd.Panel
+        return df, sum(values.values())
 
     def get_deltas(self, net=True, low=0.9, high=1.1, step=0.05):
         ''' Returns the deltas of the portfolio. Convenience function.'''

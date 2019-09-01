@@ -65,7 +65,7 @@ class stochastic_volatility(simulation_class):
             print('Error parsing market environment.')
 
     def update(self, pricing_date=None, initial_value=None, volatility=None,
-               vol_vol=None, kappa=None, theta=None, final_date=None):
+               vol_vol=None, kappa=None, theta=None, rho=None, final_date=None):
         if pricing_date is not None:
             self.pricing_date = pricing_date
             self.time_grid = None
@@ -80,6 +80,8 @@ class stochastic_volatility(simulation_class):
             self.kappa = kappa
         if theta is not None:
             self.theta = theta
+        if rho is not None:
+            self.rho = rho
         if final_date is not None:
             self.final_date = final_date
             self.time_grid = None
