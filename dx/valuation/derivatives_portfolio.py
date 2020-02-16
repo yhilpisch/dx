@@ -197,8 +197,8 @@ class derivatives_portfolio(object):
                     if corr[2] <= -1.0:
                         corr[2] = -0.999999999999
                     # fill correlation matrix
-                    correlation_matrix[corr[0]].ix[corr[1]] = corr[2]
-                    correlation_matrix[corr[1]].ix[corr[0]] = corr[2]
+                    correlation_matrix[corr[0]].loc[corr[1]] = corr[2]
+                    correlation_matrix[corr[1]].loc[corr[0]] = corr[2]
                 # determine Cholesky matrix
                 cholesky_matrix = np.linalg.cholesky(np.array(
                     correlation_matrix))
