@@ -107,8 +107,8 @@ class valuation_class_multi(object):
                     for corr in correlations:
                         if corr[2] >= 1.0:
                             corr[2] = 0.999999999999
-                        correlation_matrix[corr[0]].ix[corr[1]] = corr[2]
-                        correlation_matrix[corr[1]].ix[corr[0]] = corr[2]
+                        correlation_matrix[corr[0]].loc[corr[1]] = corr[2]
+                        correlation_matrix[corr[1]].loc[corr[0]] = corr[2]
                     self.correlation_matrix = correlation_matrix
                     cholesky_matrix = np.linalg.cholesky(
                         np.array(correlation_matrix))

@@ -94,7 +94,7 @@ class interest_rate_swap(object):
         paths = self.underlying.get_instrument_values(fixed_seed=fixed_seed)
         payoff = paths - self.fixed_rate
         payoff = pd.DataFrame(payoff, index=self.underlying.time_grid)
-        payoff = payoff.ix[self.payment_dates]
+        payoff = payoff.loc[self.payment_dates]
         return self.notional * payoff
 
     def present_value(self, fixed_seed=True, full=False):
