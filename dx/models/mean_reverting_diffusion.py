@@ -79,10 +79,10 @@ class mean_reverting_diffusion(square_root_diffusion):
             if self.truncation is True:
                 paths_[t] = (paths_[t - 1] + self.kappa *
                              (self.theta - np.maximum(0, paths_[t - 1])) * dt +
-                             self.volatility * np.sqrt(dt) * ran)
+                             np.maximum(0, paths_[t - 1]) * self.volatility * np.sqrt(dt) * ran)
                 paths[t] = np.maximum(0, paths_[t])
             else:
                 paths[t] = (paths[t - 1] + self.kappa *
                             (self.theta - paths[t - 1]) * dt +
-                            self.volatility * np.sqrt(dt) * ran)
+                            paths[t - 1] * self.volatility * np.sqrt(dt) * ran)
         self.instrument_values = paths
