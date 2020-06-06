@@ -52,7 +52,7 @@ def get_year_deltas(time_list, day_count=365.):
     '''
 
     delta_list = []
-    start = time_list[0]
+    start = min(time_list)
     for time in time_list:
         days = (time - start).days
         delta_list.append(days / day_count)
@@ -136,7 +136,7 @@ class constant_short_rate(object):
             dlist = get_year_deltas(time_list)
         else:
             dlist = np.array(time_list)
-        discount_factors = np.exp(self.short_rate * np.sort(-dlist))
+        discount_factors = np.exp(self.short_rate * -dlist)
         return time_list, discount_factors
 
 
