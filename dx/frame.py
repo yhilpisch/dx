@@ -136,7 +136,7 @@ class constant_short_rate(object):
             dlist = get_year_deltas(time_list)
         else:
             dlist = np.array(time_list)
-        discount_factors = np.exp(self.short_rate * -dlist)
+        discount_factors = np.exp(self.short_rate * np.sort(-dlist))
         return time_list, discount_factors
 
 
