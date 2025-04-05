@@ -27,6 +27,11 @@ from ..models import *
 from .single_risk import *
 from .multi_risk import *
 from .parallel_valuation import *
+#import os
+#print(os.listdir('.'))
+#exec(open("./dx/valuation/parallel_valuation.py").read())
+#print('***SPAWNING MP***')
+#mp.set_start_method('spawn', force=True)
 
 import xarray as xr  # replacement for pd.Panel
 import warnings; warnings.simplefilter('ignore')
@@ -398,8 +403,11 @@ class derivatives_portfolio(object):
                                                  'risk_facts', 'value',
                                                  'currency', 'pos_value',
                                                  'pos_delta', 'pos_vega'])
-        print('Totals\n',
-              res_df[['pos_value', 'pos_delta', 'pos_vega']].sum())
+        try:
+            print('Totals\n',
+                  res_df[['pos_value', 'pos_delta', 'pos_vega']].sum())
+        except:
+            print(res_df[['pos_value', 'pos_delta', 'pos_vega']])
         return res_df
 
     def get_port_risk(self, Greek='Delta', low=0.8, high=1.2, step=0.1,

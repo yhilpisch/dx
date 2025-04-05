@@ -134,7 +134,7 @@ def plot_greeks_3d(inputs, labels):
     x, y, z = inputs
     xl, yl, zl = labels
     fig = plt.figure(figsize=(10, 7))
-    ax = fig.gca(projection='3d')
+    ax = fig.add_subplot(projection='3d')  # CORRECTED LINE
     surf = ax.plot_surface(x, y, z, rstride=1, cstride=1,
                            cmap=cm.coolwarm, linewidth=0.5, antialiased=True)
     ax.set_xlabel(xl)

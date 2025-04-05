@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see http://www.gnu.org/licenses/.
 #
-import multiprocessing as mp
+import multiprocess as mp  # changed import
 
 
 def simulate_parallel(objs, fixed_seed=True):
@@ -33,14 +33,16 @@ def simulate_parallel(objs, fixed_seed=True):
     def worker(o, output):
         o.generate_paths(fixed_seed=fixed_seed)
         output.put((o.name, o))
+
     for o in objs:
         procs.append(mp.Process(target=worker, args=(o, output)))
-    [pr.start() for pr in procs]
-    [pr.join() for pr in procs]
-    results = [output.get() for o in objs]
-    underlying_objects = {}
-    for o in results:
-        underlying_objects[o[0]] = o[1]
+    for pr in procs:
+        pr.start()
+    for pr in procs:
+        pr.join()
+
+    results = [output.get() for _ in objs]
+    underlying_objects = {name: obj for name, obj in results}
     return underlying_objects
 
 
@@ -50,8 +52,8 @@ def value_parallel(objs, fixed_seed=True, full=False):
     output = man.Queue()
 
     def worker(o, output):
-        if full is True:
-            pvs = o.present_value(fixed_seed=fixed_seed, full=True)[1]
+        if full:
+            _, pvs = o.present_value(fixed_seed=fixed_seed, full=True)
             output.put((o.name, pvs))
         else:
             pv = o.present_value(fixed_seed=fixed_seed)
@@ -59,13 +61,13 @@ def value_parallel(objs, fixed_seed=True, full=False):
 
     for o in objs:
         procs.append(mp.Process(target=worker, args=(o, output)))
-    [pr.start() for pr in procs]
-    [pr.join() for pr in procs]
-    res_list = [output.get() for o in objs]
-    results = {}
-    for o in res_list:
-        results[o[0]] = o[1]
-    return results
+    for pr in procs:
+        pr.start()
+    for pr in procs:
+        pr.join()
+
+    res_list = [output.get() for _ in objs]
+    return {name: result for name, result in res_list}
 
 
 def greeks_parallel(objs, Greek='Delta'):
@@ -81,10 +83,10 @@ def greeks_parallel(objs, Greek='Delta'):
 
     for o in objs:
         procs.append(mp.Process(target=worker, args=(o, output)))
-    [pr.start() for pr in procs]
-    [pr.join() for pr in procs]
-    res_list = [output.get() for o in objs]
-    results = {}
-    for o in res_list:
-        results[o[0]] = o[1]
-    return results
+    for pr in procs:
+        pr.start()
+    for pr in procs:
+        pr.join()
+
+    res_list = [output.get() for _ in objs]
+    return {name: greek for name, greek in res_list}

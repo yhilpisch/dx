@@ -1,0 +1,15 @@
+name: dx
+channels:
+  - conda-forge
+dependencies:
+  - pandas
+  - numpy
+  - python=3.10
+  - jupyterlab
+  - matplotlib
+  - scipy
+  - xarray
+  - pytables
+  - xlrd
+  - multiprocess
+prefix: /Users/yves/Python/envs/dx

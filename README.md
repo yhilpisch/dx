@@ -3,6 +3,8 @@
 
 DX Analytics is a **Python-based financial analytics library** which allows the modeling of rather complex derivatives instruments and portfolios. Make sure to fully understand what you are using this Python package for and how to apply it. Please also read the license text and disclaimer.
 
+Last update in April 2025.
+
 
 ## Basic Philosophy
 
@@ -26,13 +28,13 @@ In a sense, DX Analytics brings **back office risk management modeling and valua
 
 This documentation cannot explain all technical details, it rather explains the API of the library and the single classes. There are two books available by the author of this library which are perfect companions for those who seriously consider to use the DX Analytics library. Both books together cover all major aspects important for an understanding and application of DX Analytics:
 
-### Python for Finance &mdash; Analyze Big Financial Data
+### Python for Finance &mdash; Mastering Data-Driven Finance
 
 <img src="http://hilpisch.com/images/py4fi_2nd_shadow.png" width="500px">
 
 This book, published by O'Reilly in its 2nd edition in 2018 (see http://py4fi.tpq.io), is a general introduction to Python for Finance. The book shows how to set up a proper Python infrastructure, explains basic Python techniques and packages and covers a broader range of topics important in financial data science (such as visualization) and computational finance (such as Monte Carlo simulation).
 
-The third part of the book explains and implements a sub-set of the classes and functions of **DX Analytics** as a larger case study (about 100 pages).
+The final part of the book explains and implements a sub-set of the classes and functions of **DX Analytics** as a larger case study (about 100 pages).
 
 This books provides you with the **basic and advanced Python knowledge** needed to do Python for Finance and to apply (and maybe integrate, enhance, improve) DX Analytics.
 
@@ -47,15 +49,13 @@ This book equips you with the **quantitative and computational finance knowledge
 
 ## Installation & Usage
 
-One of the most simple and efficient ways to start using DX Analytics is by registering for the **Quant Platform** under http://pqp.io.
-
-After registration, you will find a folder in your home directory called ``dx-analytics``. In this folder, you find **Jupyter Notebooks** which you can open by clicking on one of them and which are the sources for this documentation. You can interactively execute and easily adjust the code and the examples provided there.
-
-You find all you need in the Github repository http://github.com/yhilpisch/dx. Simply clone the directory to your local/remote machine, navigate to the folder and use the notebooks provided. You should also copy the library folder ``dx`` to your ``site-packages`` directory of your Python distribution for easy importing.
-
 DX Analytics has no dependencies apart from a few standard libraries (e.g. ``NumPy, pandas, SciPy, matplotlib``.)
 
-You can also install the package via
+You can create an appropriate Python environment with `conda` as follows:
+
+    conda env create -f dx_analytics.yml
+
+You can then install the package via
 
     pip install git+https://github.com/yhilpisch/dx.git
 
@@ -84,15 +84,9 @@ Fortunately, there are at least some ways to implement **sanity checks**. This i
 
 ## Questions and Support
 
-Yves Hilpisch, the author of DX Analytics, is managing partner of The Python Quants GmbH (Germany). The group provides professional support for the DX Analytics library. For inquiries in this regard contact dx@tpq.io.
+Yves Hilpisch, the author of DX Analytics, is CEO of The Python Quants GmbH (Germany). The group provides professional support for the DX Analytics library. For inquiries in this regard contact dx@tpq.io.
 
-The Python Quants offer a diverse set of Python for Finance online training courses, classes and certificates:
-
-* http://training.tpq.io
-* http://compfinance.tpq.io
-* http://certificate.tpq.io
-
-The Python Quants also provide the **Quant Platform** as a solution for browser-based, interactive, collaborative financial analytics (see http://pqp.io). On this platform (for which free trials are available) you can also immediately use DX Analytics.
+The Python Quants offers comprehensive online training program about Python & AI for Finance: https://linktr.ee/dyjh.
 
 ## Documentation
 
@@ -109,18 +103,5 @@ Public License version 3 or later (see http://www.gnu.org/licenses/).
 DX Analytics comes with no representations or warranties, to the extent
 permitted by applicable law.
 
-http://tpq.io \| dx@tpq.io \|
-http://twitter.com/dyjh
-
-**Quant Platform** \| http://pqp.io
-
-**Python for Finance Training** \| http://training.tpq.io
-
-**Certificate in Computational Finance** \| http://compfinance.tpq.io
-
-**Derivatives Analytics with Python (Wiley Finance)** \|
-http://dawp.tpq.io
-
-**Python for Finance (2nd ed., O'Reilly)** \|
-http://py4fi.tpq.io
+[Learn More & Stay in Touch](https://linktr.ee/dyjh)
 
